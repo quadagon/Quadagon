@@ -1,0 +1,346 @@
+play_code = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadagon - Play vs Computer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
+
+        header {
+            width: 100%; background: #181818; padding: 12px 4%; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 2px solid #2a2a2a;
+        }
+        .brand-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .brand-logo { font-size: 1.6rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .brand-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .lobby-home-btn {
+            background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; padding: 8px 16px;
+            border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
+            text-decoration: none; font-size: 0.9rem;
+        }
+        .lobby-home-btn:hover { background: #4CAF50; color: #121212; }
+
+        .developer-credit { font-size: 0.85rem; font-weight: 700; color: #888; background: #222; padding: 6px 14px; border-radius: 20px; border: 1px solid #333; }
+        .developer-credit span { color: #4CAF50; font-weight: 800; }
+
+        .main-container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1100px; margin: 0 auto; width: 100%; justify-content: center; align-items: flex-start; }
+
+        .board-card { background: #1e1e1e; padding: 18px; border-radius: 16px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .board-wrapper { width: 440px; height: 440px; position: relative; }
+        #chessboard { width: 100%; height: 100%; }
+
+        .white-1e1d7 { background-color: #f0d9b5 !important; color: #b58863; }
+        .black-3c85d { background-color: #b58863 !important; color: #f0d9b5; }
+
+        .sidebar { flex: 1; min-width: 320px; max-width: 400px; background: #1e1e1e; padding: 20px; border-radius: 16px; border: 1px solid #333; display: flex; flex-direction: column; gap: 16px; }
+
+        .status-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; text-align: center; }
+        .status-title { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .status-value { font-size: 1.2rem; font-weight: bold; color: #4CAF50; margin-top: 4px; }
+
+        .move-history { height: 220px; overflow-y: auto; background: #141414; border-radius: 10px; padding: 10px; border: 1px solid #2a2a2a; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+        .move-item { font-size: 0.85rem; padding: 4px 8px; background: #222; border-radius: 4px; }
+
+        .btn-group { display: flex; gap: 10px; }
+        .action-btn { flex: 1; background: #2a2a2a; color: white; border: 1px solid #3d3d3d; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .action-btn:hover { background: #333; border-color: #4CAF50; }
+        .action-btn.danger { border-color: #e53935; color: #ef5350; }
+        .action-btn.danger:hover { background: #e53935; color: #fff; }
+
+        /* Modal Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #1e1e1e; border: 1px solid #333; width: 90%; max-width: 480px; padding: 24px; border-radius: 16px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.7); }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        .modal-subtitle { font-size: 0.85rem; color: #888; margin-bottom: 20px; }
+
+        .option-group { margin-bottom: 18px; text-align: left; }
+        .option-label { font-size: 0.8rem; text-transform: uppercase; color: #aaa; font-weight: bold; margin-bottom: 8px; display: block; }
+        
+        .engine-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .engine-card { background: #141414; border: 2px solid #2a2a2a; padding: 12px 6px; border-radius: 10px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .engine-card:hover, .engine-card.selected { border-color: #4CAF50; background: rgba(76, 175, 80, 0.1); }
+        .engine-name { font-size: 0.95rem; font-weight: bold; color: #fff; }
+        .engine-desc { font-size: 0.7rem; color: #888; margin-top: 4px; }
+
+        .color-grid { display: flex; gap: 10px; }
+        .color-card { flex: 1; background: #141414; border: 2px solid #2a2a2a; padding: 10px; border-radius: 10px; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9rem; }
+        .color-card:hover, .color-card.selected { border-color: #4CAF50; background: rgba(76, 175, 80, 0.1); }
+
+        .start-btn { width: 100%; background: linear-gradient(135deg, #4CAF50, #2E7D32); color: #fff; border: none; padding: 12px; font-size: 1.05rem; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+        
+        .review-modal-btn { width: 100%; background: linear-gradient(135deg, #2196F3, #1565C0); color: #fff; border: none; padding: 12px; font-size: 1rem; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand-container" onclick="window.location.href='index.html'">
+            <div class="brand-logo">◈</div>
+            <div class="brand-title">Quadagon</div>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" class="lobby-home-btn">🏠 Main Menu</a>
+            <div class="developer-credit">Made By :- <span>Jayesh Mishra</span></div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="board-card">
+            <div class="board-wrapper">
+                <div id="chessboard"></div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="status-box">
+                <div class="status-title">Match Opponent</div>
+                <div class="status-value" id="opponentDisplay">Stockfish 18</div>
+            </div>
+
+            <div class="status-box">
+                <div class="status-title">Game Status</div>
+                <div class="status-value" id="gameStatusText" style="color: #64B5F6;">Your Turn</div>
+            </div>
+
+            <div class="move-history" id="moveHistory"></div>
+
+            <div class="btn-group">
+                <button class="action-btn" onclick="showSetupModal()">⚙️ Change Engine</button>
+                <button class="action-btn danger" onclick="resignGame()">🏳️ Resign</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div class="modal-overlay" id="setupModal">
+        <div class="modal-box">
+            <div class="modal-title">Play vs Computer</div>
+            <div class="modal-subtitle">Select Stockfish Engine level & side</div>
+
+            <div class="option-group">
+                <label class="option-label">Choose Engine Strength</label>
+                <div class="engine-grid">
+                    <div class="engine-card" onclick="selectEngine(16, this)">
+                        <div class="engine-name">Stockfish 16</div>
+                        <div class="engine-desc">Intermediate<br>~1600 Elo</div>
+                    </div>
+                    <div class="engine-card selected" onclick="selectEngine(18, this)">
+                        <div class="engine-name">Stockfish 18</div>
+                        <div class="engine-desc">Master<br>~2200 Elo</div>
+                    </div>
+                    <div class="engine-card" onclick="selectEngine(20, this)">
+                        <div class="engine-name">Stockfish 20</div>
+                        <div class="engine-desc">Grandmaster<br>~2800+ Elo</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <label class="option-label">Play As</label>
+                <div class="color-grid">
+                    <div class="color-card selected" onclick="selectColor('white', this)">♔ White</div>
+                    <div class="color-card" onclick="selectColor('black', this)">♚ Black</div>
+                    <div class="color-card" onclick="selectColor('random', this)">🎲 Random</div>
+                </div>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">⚔️ Start Game</button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal-overlay" id="gameOverModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-title" id="gameOverTitle">Game Over</div>
+            <div class="modal-subtitle" id="gameOverReason">Checkmate!</div>
+
+            <button class="review-modal-btn" onclick="redirectToReview()">
+                🔍 Review Game in Studio
+            </button>
+            <button class="action-btn" style="width: 100%; margin-top: 8px;" onclick="showSetupModal()">
+                🔄 Play Again
+            </button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        let board = null, game = new Chess();
+        let selectedEngineVer = 18;
+        let playerColor = 'white';
+        let stockfishWorker = null;
+
+        const ENGINE_CONFIGS = {
+            16: { depth: 8, name: "Stockfish 16 (1600 Elo)" },
+            18: { depth: 13, name: "Stockfish 18 (2200 Elo)" },
+            20: { depth: 18, name: "Stockfish 20 (2800+ Elo)" }
+        };
+
+        $(document).ready(function() {
+            board = Chessboard('chessboard', {
+                draggable: true,
+                position: 'start',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                onDragStart: handleDragStart,
+                onDrop: handleDrop,
+                onSnapEnd: () => board.position(game.fen())
+            });
+            initEngine();
+        });
+
+        function initEngine() {
+            try {
+                const blob = new Blob([`
+                    importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+                `], { type: 'application/javascript' });
+                
+                stockfishWorker = new Worker(URL.createObjectURL(blob));
+                stockfishWorker.onmessage = function(e) {
+                    const line = e.data;
+                    if (line.includes('bestmove')) {
+                        const moveStr = line.split(' ')[1];
+                        if (moveStr && moveStr.length >= 4) {
+                            const from = moveStr.substring(0, 2);
+                            const to = moveStr.substring(2, 4);
+                            const promo = moveStr.length > 4 ? moveStr[4] : 'q';
+                            
+                            setTimeout(() => {
+                                game.move({ from, to, promotion: promo });
+                                board.position(game.fen());
+                                updateGameUI();
+                                checkGameOver();
+                            }, 300);
+                        }
+                    }
+                };
+                stockfishWorker.postMessage('uci');
+                stockfishWorker.postMessage('isready');
+            } catch(e) { console.log('Engine load error', e); }
+        }
+
+        function selectEngine(ver, el) {
+            selectedEngineVer = ver;
+            $('.engine-card').removeClass('selected');
+            $(el).addClass('selected');
+        }
+
+        function selectColor(color, el) {
+            playerColor = color;
+            $('.color-card').removeClass('selected');
+            $(el).addClass('selected');
+        }
+
+        function showSetupModal() {
+            $('#gameOverModal').hide();
+            $('#setupModal').css('display', 'flex');
+        }
+
+        function startGame() {
+            game.reset();
+            let actualColor = playerColor;
+            if (playerColor === 'random') actualColor = Math.random() > 0.5 ? 'white' : 'black';
+            
+            playerColor = actualColor;
+            board.orientation(playerColor);
+            board.position('start');
+            
+            $('#opponentDisplay').text(ENGINE_CONFIGS[selectedEngineVer].name);
+            $('#setupModal').hide();
+            updateGameUI();
+
+            if (playerColor === 'black') {
+                triggerComputerMove();
+            }
+        }
+
+        function handleDragStart(source, piece) {
+            if (game.game_over()) return false;
+            const turn = game.turn() === 'w' ? 'white' : 'black';
+            if (turn !== playerColor) return false;
+            if ((playerColor === 'white' && piece.search(/^b/) !== -1) ||
+                (playerColor === 'black' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+
+        function handleDrop(source, target) {
+            const move = game.move({ from: source, to: target, promotion: 'q' });
+            if (!move) return 'snapback';
+
+            updateGameUI();
+            if (!checkGameOver()) {
+                triggerComputerMove();
+            }
+        }
+
+        function triggerComputerMove() {
+            if (game.game_over() || !stockfishWorker) return;
+            $('#gameStatusText').text('Computer Thinking...').css('color', '#FFB74D');
+            
+            const cfg = ENGINE_CONFIGS[selectedEngineVer];
+            stockfishWorker.postMessage('position fen ' + game.fen());
+            stockfishWorker.postMessage('go depth ' + cfg.depth);
+        }
+
+        function updateGameUI() {
+            const isPlayerTurn = (game.turn() === 'w' && playerColor === 'white') || (game.turn() === 'b' && playerColor === 'black');
+            if (!game.game_over()) {
+                $('#gameStatusText').text(isPlayerTurn ? 'Your Turn' : 'Computer Thinking...')
+                                  .css('color', isPlayerTurn ? '#4CAF50' : '#FFB74D');
+            }
+
+            const history = game.history();
+            const $h = $('#moveHistory').empty();
+            history.forEach((m, i) => {
+                $h.append(`<div class="move-item">${i%2===0 ? Math.floor(i/2)+1+'. ' : ''}${m}</div>`);
+            });
+            $h.scrollTop($h[0].scrollHeight);
+        }
+
+        function checkGameOver() {
+            if (game.game_over()) {
+                let title = "Game Over", reason = "";
+                if (game.in_checkmate()) {
+                    const winner = game.turn() === 'w' ? 'Black' : 'White';
+                    title = winner + " Wins!";
+                    reason = "By Checkmate";
+                } else if (game.in_draw()) {
+                    title = "Draw!";
+                    reason = game.in_stalemate() ? "Stalemate" : "Insufficient Material / Draw";
+                }
+                
+                $('#gameOverTitle').text(title);
+                $('#gameOverReason').text(reason);
+                $('#gameStatusText').text(title).css('color', '#EF5350');
+                $('#gameOverModal').css('display', 'flex');
+                return true;
+            }
+            return false;
+        }
+
+        function resignGame() {
+            if (confirm("Are you sure you want to resign?")) {
+                $('#gameOverTitle').text("You Resigned");
+                $('#gameOverReason').text("Computer Wins!");
+                $('#gameOverModal').css('display', 'flex');
+            }
+        }
+
+        function redirectToReview() {
+            const pgn = game.pgn();
+            localStorage.setItem('quadagon_review_pgn', pgn);
+            window.location.href = 'review.html?load_storage=1';
+        }
+    </script>
+</body>
+</html>'''
+
+with open('play.html', 'w') as f: f.write(play_code)
+print('✅ Created play.html (Play vs Computer)! Updating review.html integration...')

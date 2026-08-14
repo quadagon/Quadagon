@@ -1,0 +1,78 @@
+lobby_html = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadagon - Chess Platform</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #121212; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+
+        header {
+            width: 100%; background: #181818; padding: 16px 5%; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 2px solid #2a2a2a;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .logo { font-size: 1.8rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .title { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+        .credit { font-size: 0.9rem; font-weight: 700; color: #888; background: #222; padding: 6px 14px; border-radius: 20px; border: 1px solid #333; }
+        .credit span { color: #4CAF50; font-weight: 800; }
+
+        .container { max-width: 1000px; width: 90%; margin: 40px auto; text-align: center; }
+        .hero-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
+        .hero-subtitle { font-size: 1.1rem; color: #aaa; margin-bottom: 40px; }
+
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; justify-content: center; }
+        .card {
+            background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 26px 20px;
+            display: flex; flex-direction: column; align-items: center; gap: 14px; transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none; color: inherit;
+        }
+        .card:hover { transform: translateY(-5px); border-color: #4CAF50; box-shadow: 0 10px 25px rgba(76, 175, 80, 0.15); }
+        .card-icon { font-size: 2.8rem; }
+        .card-title { font-size: 1.3rem; font-weight: bold; }
+        .card-desc { font-size: 0.85rem; color: #888; line-height: 1.4; }
+        .card-btn { background: #4CAF50; color: #121212; font-weight: bold; border: none; padding: 10px 20px; border-radius: 8px; width: 100%; margin-top: auto; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="logo">◈</div>
+            <div class="title">Quadagon</div>
+        </div>
+        <div class="credit">Made By :- <span>Jayesh Mishra</span></div>
+    </header>
+
+    <div class="container">
+        <h1 class="hero-title">Welcome to Quadagon</h1>
+        <p class="hero-subtitle">Master chess with Stockfish Engine, Game Review, and Book Puzzles</p>
+
+        <div class="cards-grid">
+            <a href="play.html" class="card">
+                <div class="card-icon">🤖</div>
+                <div class="card-title">Play vs Computer</div>
+                <div class="card-desc">Challenge Stockfish 16, 18, or 20 in a clean environment.</div>
+                <button class="card-btn">Play Now</button>
+            </a>
+
+            <a href="puzzles.html" class="card">
+                <div class="card-icon">🧩</div>
+                <div class="card-title">Book Puzzles Training</div>
+                <div class="card-desc">Train with Dvoretsky & Woodpecker PGN files with auto-validation.</div>
+                <button class="card-btn">Train Puzzles</button>
+            </a>
+
+            <a href="review.html" class="card">
+                <div class="card-icon">🔍</div>
+                <div class="card-title">Game Review Studio</div>
+                <div class="card-desc">Deep position analysis, evaluation bar, and move accuracy.</div>
+                <button class="card-btn">Open Studio</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>'''
+
+with open('index.html', 'w') as f: f.write(lobby_html)
+print('✅ index.html linked with puzzles.html!')
