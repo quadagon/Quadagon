@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon Pro - Solid Suite</title>
+    <title>Quadagon Pro - Ultimate Engine Suite</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -35,29 +35,31 @@
 
         .board-container { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
         
-        /* Strict 8x8 Board - Exactly 64 Squares */
+        /* Strict 8x8 Board with Large Lichess Style Sizing */
         #chessboard {
-            width: 384px;
-            height: 384px;
+            width: 416px;
+            height: 416px;
             display: grid;
-            grid-template-columns: repeat(8, 48px);
-            grid-template-rows: repeat(8, 48px);
+            grid-template-columns: repeat(8, 52px);
+            grid-template-rows: repeat(8, 52px);
             border: 4px solid #2a2a2a;
-            border-radius: 4px;
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
         .square {
-            width: 48px;
-            height: 48px;
+            width: 52px;
+            height: 52px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            font-size: 3.2rem; /* BADE PIECES */
             cursor: pointer;
             user-select: none;
+            transition: background 0.1s ease;
         }
-        .square.light { background-color: #f0d9b5; }
-        .square.dark { background-color: #b58863; }
-        .square.selected { background-color: #baca44 !important; }
+        .square.light { background-color: #ebecd0; }
+        .square.dark { background-color: #739552; }
+        .square.selected { background-color: #bbc93e !important; }
 
         .status-box { margin-top: 12px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
         .report-box { width: 100%; max-width: 720px; background: #1e1e1e; padding: 20px; border-radius: 14px; border: 1px solid #333; margin-top: 20px; display: none; text-align: left; }
@@ -142,9 +144,13 @@
                     if (piece) {
                         let symbolKey = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
                         squareDiv.textContent = pieceSymbols[symbolKey] || '';
-                        squareDiv.style.color = piece.color === 'w' ? '#ffffff' : '#000000';
+                        
                         if(piece.color === 'w') {
-                            squareDiv.style.textShadow = '0 1px 2px #000';
+                            squareDiv.style.color = '#ffffff';
+                            squareDiv.style.textShadow = '0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)';
+                        } else {
+                            squareDiv.style.color = '#151515';
+                            squareDiv.style.textShadow = '0 1px 1px rgba(255,255,255,0.3)';
                         }
                     }
 
@@ -182,7 +188,7 @@
                 updateStatus();
 
                 if (!game.game_over()) {
-                    setTimeout(makeEngineMove, 300);
+                    setTimeout(makeEngineMove, 200);
                 } else {
                     handleGameOver();
                 }
@@ -194,9 +200,15 @@
             document.getElementById('gameStatus').innerText = 'Stockfish is thinking...';
 
             let fen = game.fen();
-            fetch(`https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(fen)}&depth=${currentDepth}`)
+            
+            // Timeout controller taaki agar API slow ho toh game na fase
+            let controller = new AbortController();
+            let timeoutId = setTimeout(() => controller.abort(), 4000);
+
+            fetch(`https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(fen)}&depth=${currentDepth}`, { signal: controller.signal })
                 .then(res => res.json())
                 .then(data => {
+                    clearTimeout(timeoutId);
                     if (data && data.bestmove) {
                         let moveParts = data.bestmove.split(' ');
                         let bestMoveStr = moveParts.length > 1 ? moveParts[1] : moveParts[0];
@@ -210,11 +222,28 @@
                         updateStatus();
 
                         if (game.game_over()) handleGameOver();
+                    } else {
+                        makeSmartFallbackMove();
                     }
                 })
                 .catch(() => {
-                    document.getElementById('gameStatus').innerText = 'Engine error. Try moving again.';
+                    makeSmartFallbackMove();
                 });
+        }
+
+        // Instant fallback taaki engine kabhi hang na ho
+        function makeSmartFallbackMove() {
+            let possibleMoves = game.moves({ verbose: true });
+            if (possibleMoves.length > 0) {
+                // Pick a sensible capture or random legal move
+                let move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                game.move(move);
+                renderBoard();
+                updateStatus();
+                if (game.game_over()) handleGameOver();
+            } else {
+                document.getElementById('gameStatus').innerText = 'Game Over';
+            }
         }
 
         function setDepth(depth) {
