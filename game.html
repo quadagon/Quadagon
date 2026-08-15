@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon Pro - Ultimate Engine Suite</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <title>Quadagon Pro - Native Engine Suite</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 30px; }
@@ -34,17 +32,33 @@
         .action-btn { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; }
         .action-btn:hover { background: #444; }
         .primary-btn { background: #4CAF50; color: #000; border: none; }
-        .primary-btn:hover { background: #45a049; }
         .danger-btn { background: #d32f2f; color: #fff; border: none; }
 
         .board-container { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
         
-        /* Explicit fixed wrapper size to force board visibility */
-        .board-wrapper { width: 400px; height: 400px; position: relative; }
-        #chessboard { width: 100%; height: 100%; }
+        /* Native CSS Grid Chessboard */
+        #chessboard {
+            width: 400px;
+            height: 400px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border: 4px solid #2a2a2a;
+            border-radius: 4px;
+        }
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .square.light { background-color: #f0d9b5; color: #000; }
+        .square.dark { background-color: #b58863; color: #000; }
+        .square.selected { background-color: #baca44 !important; }
 
-        .status-box { margin-top: 10px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
-        
+        .status-box { margin-top: 12px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
         .report-box { width: 100%; max-width: 720px; background: #1e1e1e; padding: 20px; border-radius: 14px; border: 1px solid #333; margin-top: 20px; display: none; text-align: left; }
         .watermark { margin-top: 25px; font-size: 0.85rem; color: #777; text-align: center; }
     </style>
@@ -59,7 +73,6 @@
     </header>
 
     <div class="main-wrapper">
-        <!-- Control Panel -->
         <div class="control-panel">
             <div class="panel-section">
                 <span class="panel-title">🧠 Engine Level</span>
@@ -88,11 +101,8 @@
             <button class="action-btn primary-btn" id="reviewBtn" style="display:none;" onclick="runGameReview()">📊 Run Game Review</button>
         </div>
 
-        <!-- Board Section -->
         <div class="board-container">
-            <div class="board-wrapper">
-                <div id="chessboard"></div>
-            </div>
+            <div id="chessboard"></div>
             <div class="status-box" id="gameStatus">Your Turn (White)</div>
         </div>
     </div>
@@ -102,61 +112,88 @@
 
     <script>
         var game = new Chess();
-        var board = null;
         var currentDepth = 16;
         var playerColor = 'w';
         var isGameOver = false;
+        var selectedSquare = null;
 
-        $(document).ready(function() {
-            board = Chessboard('chessboard', {
-                draggable: true,
-                position: 'start',
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                onSnapEnd: onSnapEnd
+        const pieceSymbols = {
+            'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+            'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+        };
+
+        function renderBoard() {
+            let boardElement = document.getElementById('chessboard');
+            boardElement.innerHTML = '';
+            
+            let board = game.board();
+            let rows = playerColor === 'w' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
+            let cols = playerColor === 'w' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
+
+            rows.forEach(r => {
+                cols.forEach(c => {
+                    let squareId = String.fromCharCode(97 + c) + (8 - r);
+                    let piece = board[r][c];
+                    let squareDiv = document.createElement('div');
+                    squareDiv.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    if (selectedSquare === squareId) squareDiv.classList.add('selected');
+                    
+                    if (piece) {
+                        let symbolKey = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
+                        squareDiv.textContent = pieceSymbols[symbolKey] || '';
+                        if(piece.color === 'w') {
+                            squareDiv.style.color = '#fff';
+                            squareDiv.style.textShadow = '0 0 2px #000';
+                        } else {
+                            squareDiv.style.color = '#000';
+                        }
+                    }
+
+                    squareDiv.onclick = () => handleSquareClick(squareId);
+                    boardElement.appendChild(squareDiv);
+                });
             });
-
-            // Force board resize check instantly after load
-            setTimeout(function() {
-                if (board) board.resize();
-            }, 150);
-        });
-
-        function onDragStart(source, piece, position, orientation) {
-            if (isGameOver) return false;
-            if (game.turn() !== playerColor) return false;
-            if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
         }
 
-        function onDrop(source, target) {
-            let move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q'
-            });
+        function handleSquareClick(squareId) {
+            if (isGameOver) return;
+            if (game.turn() !== playerColor) return;
 
-            if (move === null) return 'snapback';
-
-            updateStatus();
-
-            if (!game.game_over()) {
-                isGameOver = false;
-                setTimeout(makeEngineMove, 300);
+            if (!selectedSquare) {
+                let piece = game.get(squareId);
+                if (piece && piece.color === playerColor) {
+                    selectedSquare = squareId;
+                    renderBoard();
+                }
             } else {
-                handleGameOver();
-            }
-        }
+                let move = game.move({
+                    from: selectedSquare,
+                    to: squareId,
+                    promotion: 'q'
+                });
 
-        function onSnapEnd() {
-            board.position(game.fen());
+                selectedSquare = null;
+                if (move === null) {
+                    let piece = game.get(squareId);
+                    if (piece && piece.color === playerColor) {
+                        selectedSquare = squareId;
+                    }
+                }
+                renderBoard();
+                updateStatus();
+
+                if (!game.game_over()) {
+                    setTimeout(makeEngineMove, 300);
+                } else {
+                    handleGameOver();
+                }
+            }
         }
 
         function makeEngineMove() {
             if (game.game_over()) return;
-            
             $('#gameStatus').text('Stockfish is thinking...');
-            
+
             let fen = game.fen();
             fetch(`https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(fen)}&depth=${currentDepth}`)
                 .then(res => res.json())
@@ -169,24 +206,14 @@
                         let toSq = bestMoveStr.substring(2, 4);
                         let promotionPiece = bestMoveStr.length > 4 ? bestMoveStr.substring(4, 5) : 'q';
 
-                        game.move({
-                            from: fromSq,
-                            to: toSq,
-                            promotion: promotionPiece
-                        });
-
-                        board.position(game.fen());
+                        game.move({ from: fromSq, to: toSq, promotion: promotionPiece });
+                        renderBoard();
                         updateStatus();
 
-                        if (game.game_over()) {
-                            handleGameOver();
-                        }
+                        if (game.game_over()) handleGameOver();
                     }
                 })
-                .catch(err => {
-                    console.error("Engine error:", err);
-                    $('#gameStatus').text('Engine error. Try moving again.');
-                });
+                .catch(() => $('#gameStatus').text('Engine error. Try again.'));
         }
 
         function setDepth(depth, btn) {
@@ -204,27 +231,26 @@
 
         function startNewGame() {
             game.reset();
-            board.start();
             isGameOver = false;
+            selectedSquare = null;
             $('#reviewBtn').hide();
             $('#reportReport').hide();
-            
+            renderBoard();
+
             if (playerColor === 'b') {
-                board.orientation('black');
                 $('#gameStatus').text('Stockfish (White) is thinking...');
                 setTimeout(makeEngineMove, 400);
             } else {
-                board.orientation('white');
                 $('#gameStatus').text('Your Turn (White)');
             }
-            setTimeout(function() { if (board) board.resize(); }, 100);
         }
 
         function undoMove() {
             if (isGameOver) return;
             game.undo();
             game.undo();
-            board.position(game.fen());
+            selectedSquare = null;
+            renderBoard();
             updateStatus();
         }
 
@@ -250,9 +276,7 @@
                 $('#reviewBtn'].show();
             } else {
                 status = `${moveColor}'s Turn`;
-                if (game.in_check()) {
-                    status += ' (Check!)';
-                }
+                if (game.in_check()) status += ' (Check!)';
             }
             $('#gameStatus').text(status);
         }
@@ -267,13 +291,18 @@
             $('#reportReport').show().html(`
                 <h3 style="color:#4CAF50; margin-bottom:10px;">👑 Quadagon Game Review Report</h3>
                 <hr style="border-color:#333; margin-bottom:10px;">
-                <p><b>Engine Depth Used:</b> Depth ${currentDepth}</p>
+                <p><b>Engine Depth:</b> Depth ${currentDepth}</p>
                 <p><b>White Accuracy:</b> <span style="color:#4CAF50;">93.8%</span></p>
                 <p><b>Black Accuracy:</b> <span style="color:#4CAF50;">89.2%</span></p>
-                <p style="margin-top:8px; color:#d2691e;"><b>Opening Theory:</b> Book Move detected 📖</p>
+                <p style="margin-top:8px; color:#d2691e;"><b>Opening:</b> Book Move detected 📖</p>
                 <p style="font-size:0.8rem; color:#888; margin-top:8px;">PGN: ${game.pgn()}</p>
             `);
         }
+
+        // Initialize board on load
+        $(document).ready(() => {
+            renderBoard();
+        });
     </script>
 </body>
 </html>
