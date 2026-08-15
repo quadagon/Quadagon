@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon Pro - Ultimate Engine Suite</title>
+    <title>Quadagon Pro - Elite Suite</title>
+    <!-- Stable Chessboard.js & Chess.js CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 30px; }
@@ -35,31 +39,9 @@
 
         .board-container { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
         
-        /* Strict 8x8 Board with Large Lichess Style Sizing */
-        #chessboard {
-            width: 416px;
-            height: 416px;
-            display: grid;
-            grid-template-columns: repeat(8, 52px);
-            grid-template-rows: repeat(8, 52px);
-            border: 4px solid #2a2a2a;
-            border-radius: 6px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-        }
-        .square {
-            width: 52px;
-            height: 52px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.2rem; /* BADE PIECES */
-            cursor: pointer;
-            user-select: none;
-            transition: background 0.1s ease;
-        }
-        .square.light { background-color: #ebecd0; }
-        .square.dark { background-color: #739552; }
-        .square.selected { background-color: #bbc93e !important; }
+        /* Elite Lichess-style Board Wrapper */
+        .board-wrapper { width: 400px; height: 400px; position: relative; border-radius: 6px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+        #chessboard { width: 100%; height: 100%; }
 
         .status-box { margin-top: 12px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
         .report-box { width: 100%; max-width: 720px; background: #1e1e1e; padding: 20px; border-radius: 14px; border: 1px solid #333; margin-top: 20px; display: none; text-align: left; }
@@ -80,17 +62,17 @@
             <div class="panel-section">
                 <span class="panel-title">🧠 Engine Level</span>
                 <div class="btn-group">
-                    <button class="engine-btn active" id="btn-16" onclick="setDepth(16)">SF 16</button>
-                    <button class="engine-btn" id="btn-18" onclick="setDepth(18)">SF 18</button>
-                    <button class="engine-btn" id="btn-20" onclick="setDepth(20)">SF 20</button>
+                    <button class="engine-btn active" onclick="setDepth(16, this)">SF 16</button>
+                    <button class="engine-btn" onclick="setDepth(18, this)">SF 18</button>
+                    <button class="engine-btn" onclick="setDepth(20, this)">SF 20</button>
                 </div>
             </div>
 
             <div class="panel-section">
                 <span class="panel-title">♟️ Choose Color</span>
                 <div class="btn-group">
-                    <button class="color-btn active" id="btn-w" onclick="setColor('w')">White</button>
-                    <button class="color-btn" id="btn-b" onclick="setColor('b')">Black</button>
+                    <button class="color-btn active" onclick="setColor('w', this)">White</button>
+                    <button class="color-btn" onclick="setColor('b', this)">Black</button>
                 </div>
             </div>
 
@@ -105,7 +87,9 @@
         </div>
 
         <div class="board-container">
-            <div id="chessboard"></div>
+            <div class="board-wrapper">
+                <div id="chessboard"></div>
+            </div>
             <div class="status-box" id="gameStatus">Your Turn (White)</div>
         </div>
     </div>
@@ -114,94 +98,65 @@
     <div class="watermark">👑 Made By :- Jayesh Mishra 🔥</div>
 
     <script>
-        let game = new Chess();
-        let currentDepth = 16;
-        let playerColor = 'w';
-        let isGameOver = false;
-        let selectedSquare = null;
+        var game = new Chess();
+        var board = null;
+        var currentDepth = 16;
+        var playerColor = 'w';
+        var isGameOver = false;
 
-        const pieceSymbols = {
-            'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
-            'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
-        };
-
-        function renderBoard() {
-            let boardElement = document.getElementById('chessboard');
-            boardElement.innerHTML = '';
-            
-            let board = game.board();
-            let rows = playerColor === 'w' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
-            let cols = playerColor === 'w' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
-
-            rows.forEach(r => {
-                cols.forEach(c => {
-                    let squareId = String.fromCharCode(97 + c) + (8 - r);
-                    let piece = board[r][c];
-                    let squareDiv = document.createElement('div');
-                    squareDiv.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    if (selectedSquare === squareId) squareDiv.classList.add('selected');
-                    
-                    if (piece) {
-                        let symbolKey = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
-                        squareDiv.textContent = pieceSymbols[symbolKey] || '';
-                        
-                        if(piece.color === 'w') {
-                            squareDiv.style.color = '#ffffff';
-                            squareDiv.style.textShadow = '0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)';
-                        } else {
-                            squareDiv.style.color = '#151515';
-                            squareDiv.style.textShadow = '0 1px 1px rgba(255,255,255,0.3)';
-                        }
-                    }
-
-                    squareDiv.onclick = () => handleSquareClick(squareId);
-                    boardElement.appendChild(squareDiv);
-                });
+        $(document).ready(function() {
+            // Initializing professional board with Lichess/Chess.com standard high-def pieces
+            board = Chessboard('chessboard', {
+                draggable: true,
+                position: 'start',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd
             });
+
+            setTimeout(function() {
+                if (board) board.resize();
+            }, 200);
+        });
+
+        function onDragStart(source, piece, position, orientation) {
+            if (isGameOver) return false;
+            if (game.turn() !== playerColor) return false;
+            // Prevent moving opponent pieces
+            if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
         }
 
-        function handleSquareClick(squareId) {
-            if (isGameOver) return;
-            if (game.turn() !== playerColor) return;
+        function onDrop(source, target) {
+            let move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
 
-            if (!selectedSquare) {
-                let piece = game.get(squareId);
-                if (piece && piece.color === playerColor) {
-                    selectedSquare = squareId;
-                    renderBoard();
-                }
+            if (move === null) return 'snapback';
+
+            updateStatus();
+
+            if (!game.game_over()) {
+                isGameOver = false;
+                setTimeout(makeEngineMove, 250);
             } else {
-                let move = game.move({
-                    from: selectedSquare,
-                    to: squareId,
-                    promotion: 'q'
-                });
-
-                selectedSquare = null;
-                if (move === null) {
-                    let piece = game.get(squareId);
-                    if (piece && piece.color === playerColor) {
-                        selectedSquare = squareId;
-                    }
-                }
-                renderBoard();
-                updateStatus();
-
-                if (!game.game_over()) {
-                    setTimeout(makeEngineMove, 200);
-                } else {
-                    handleGameOver();
-                }
+                handleGameOver();
             }
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
         }
 
         function makeEngineMove() {
             if (game.game_over()) return;
-            document.getElementById('gameStatus').innerText = 'Stockfish is thinking...';
+            $('#gameStatus').text('Stockfish is thinking...');
 
             let fen = game.fen();
             
-            // Timeout controller taaki agar API slow ho toh game na fase
+            // Timeout protection wrapper for public API
             let controller = new AbortController();
             let timeoutId = setTimeout(() => controller.abort(), 4000);
 
@@ -217,70 +172,76 @@
                         let toSq = bestMoveStr.substring(2, 4);
                         let promotionPiece = bestMoveStr.length > 4 ? bestMoveStr.substring(4, 5) : 'q';
 
-                        game.move({ from: fromSq, to: toSq, promotion: promotionPiece });
-                        renderBoard();
+                        game.move({
+                            from: fromSq,
+                            to: toSq,
+                            promotion: promotionPiece
+                        });
+
+                        board.position(game.fen());
                         updateStatus();
 
-                        if (game.game_over()) handleGameOver();
+                        if (game.game_over()) {
+                            handleGameOver();
+                        }
                     } else {
-                        makeSmartFallbackMove();
+                        makeFallbackMove();
                     }
                 })
                 .catch(() => {
-                    makeSmartFallbackMove();
+                    makeFallbackMove();
                 });
         }
 
-        // Instant fallback taaki engine kabhi hang na ho
-        function makeSmartFallbackMove() {
-            let possibleMoves = game.moves({ verbose: true });
-            if (possibleMoves.length > 0) {
-                // Pick a sensible capture or random legal move
-                let move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-                game.move(move);
-                renderBoard();
+        function makeFallbackMove() {
+            let moves = game.moves({ verbose: true });
+            if (moves.length > 0) {
+                let randomMove = moves[Math.floor(Math.random() * moves.length)];
+                game.move(randomMove);
+                board.position(game.fen());
                 updateStatus();
                 if (game.game_over()) handleGameOver();
             } else {
-                document.getElementById('gameStatus').innerText = 'Game Over';
+                $('#gameStatus').text('Game Over');
             }
         }
 
-        function setDepth(depth) {
+        function setDepth(depth, btn) {
             currentDepth = depth;
-            document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + depth).classList.add('active');
+            $('.engine-btn').removeClass('active');
+            $(btn).addClass('active');
         }
 
-        function setColor(color) {
+        function setColor(color, btn) {
             playerColor = color;
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + color).classList.add('active');
+            $('.color-btn').removeClass('active');
+            $(btn).addClass('active');
             startNewGame();
         }
 
         function startNewGame() {
             game.reset();
+            board.start();
             isGameOver = false;
-            selectedSquare = null;
-            document.getElementById('reviewBtn').style.display = 'none';
-            document.getElementById('reportReport').style.display = 'none';
-            renderBoard();
-
+            $('#reviewBtn').hide();
+            $('#reportReport').hide();
+            
             if (playerColor === 'b') {
-                document.getElementById('gameStatus').innerText = 'Stockfish (White) is thinking...';
+                board.orientation('black');
+                $('#gameStatus').text('Stockfish (White) is thinking...');
                 setTimeout(makeEngineMove, 400);
             } else {
-                document.getElementById('gameStatus').innerText = 'Your Turn (White)';
+                board.orientation('white');
+                $('#gameStatus').text('Your Turn (White)');
             }
+            setTimeout(function() { if (board) board.resize(); }, 100);
         }
 
         function undoMove() {
             if (isGameOver) return;
             game.undo();
             game.undo();
-            selectedSquare = null;
-            renderBoard();
+            board.position(game.fen());
             updateStatus();
         }
 
@@ -288,39 +249,39 @@
             if (isGameOver) return;
             isGameOver = true;
             let winner = playerColor === 'w' ? 'Black (Stockfish)' : 'White (Stockfish)';
-            document.getElementById('gameStatus').innerText = `You Resigned. Winner: ${winner}`;
-            document.getElementById('reviewBtn').style.display = 'block';
+            $('#gameStatus').text(`You Resigned. Winner: ${winner}`);
+            $('#reviewBtn').show();
         }
 
         function updateStatus() {
-            let moveColor = game.turn() === 'w' ? 'White' : 'Black';
             let status = '';
+            let moveColor = game.turn() === 'w' ? 'White' : 'Black';
 
             if (game.in_checkmate()) {
                 isGameOver = true;
                 status = `Checkmate! Game Over. ${moveColor} lost.`;
-                document.getElementById('reviewBtn').style.display = 'block';
+                $('#reviewBtn').show();
             } else if (game.in_draw()) {
                 isGameOver = true;
                 status = 'Game Drawn!';
-                document.getElementById('reviewBtn').style.display = 'block';
+                $('#reviewBtn'].show();
             } else {
                 status = `${moveColor}'s Turn`;
-                if (game.in_check()) status += ' (Check!)';
+                if (game.in_check()) {
+                    status += ' (Check!)';
+                }
             }
-            document.getElementById('gameStatus').innerText = status;
+            $('#gameStatus').text(status);
         }
 
         function handleGameOver() {
             isGameOver = true;
-            document.getElementById('reviewBtn').style.display = 'block';
+            $('#reviewBtn').show();
             updateStatus();
         }
 
         function runGameReview() {
-            let reportDiv = document.getElementById('reportReport');
-            reportDiv.style.display = 'block';
-            reportDiv.innerHTML = `
+            $('#reportReport').show().html(`
                 <h3 style="color:#4CAF50; margin-bottom:10px;">👑 Quadagon Game Review Report</h3>
                 <hr style="border-color:#333; margin-bottom:10px;">
                 <p><b>Engine Depth:</b> Depth ${currentDepth}</p>
@@ -328,12 +289,8 @@
                 <p><b>Black Accuracy:</b> <span style="color:#4CAF50;">89.2%</span></p>
                 <p style="margin-top:8px; color:#d2691e;"><b>Opening:</b> Book Move detected 📖</p>
                 <p style="font-size:0.8rem; color:#888; margin-top:8px;">PGN: ${game.pgn()}</p>
-            `;
+            `);
         }
-
-        window.onload = function() {
-            renderBoard();
-        };
     </script>
 </body>
 </html>
