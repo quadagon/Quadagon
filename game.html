@@ -38,7 +38,10 @@
         .danger-btn { background: #d32f2f; color: #fff; border: none; }
 
         .board-container { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
-        #chessboard { width: 400px; height: 400px; }
+        
+        /* Explicit fixed wrapper size to force board visibility */
+        .board-wrapper { width: 400px; height: 400px; position: relative; }
+        #chessboard { width: 100%; height: 100%; }
 
         .status-box { margin-top: 10px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
         
@@ -87,7 +90,9 @@
 
         <!-- Board Section -->
         <div class="board-container">
-            <div id="chessboard"></div>
+            <div class="board-wrapper">
+                <div id="chessboard"></div>
+            </div>
             <div class="status-box" id="gameStatus">Your Turn (White)</div>
         </div>
     </div>
@@ -111,11 +116,15 @@
                 onDrop: onDrop,
                 onSnapEnd: onSnapEnd
             });
+
+            // Force board resize check instantly after load
+            setTimeout(function() {
+                if (board) board.resize();
+            }, 150);
         });
 
         function onDragStart(source, piece, position, orientation) {
             if (isGameOver) return false;
-            // Prevent moving opponent pieces
             if (game.turn() !== playerColor) return false;
             if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
         }
@@ -131,7 +140,6 @@
 
             updateStatus();
 
-            // Trigger engine move after a short delay
             if (!game.game_over()) {
                 isGameOver = false;
                 setTimeout(makeEngineMove, 300);
@@ -157,7 +165,6 @@
                         let moveParts = data.bestmove.split(' ');
                         let bestMoveStr = moveParts.length > 1 ? moveParts[1] : moveParts[0];
                         
-                        // Parse UCI move format (e.g., e2e4)
                         let fromSq = bestMoveStr.substring(0, 2);
                         let toSq = bestMoveStr.substring(2, 4);
                         let promotionPiece = bestMoveStr.length > 4 ? bestMoveStr.substring(4, 5) : 'q';
@@ -210,11 +217,11 @@
                 board.orientation('white');
                 $('#gameStatus').text('Your Turn (White)');
             }
+            setTimeout(function() { if (board) board.resize(); }, 100);
         }
 
         function undoMove() {
             if (isGameOver) return;
-            // Undo twice in player vs engine mode (undo bot move + player move)
             game.undo();
             game.undo();
             board.position(game.fen());
