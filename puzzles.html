@@ -20,7 +20,9 @@
         .lobby-home-btn {
             background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; padding: 6px 14px;
             border-radius: 20px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem;
+            transition: all 0.2s ease;
         }
+        .lobby-home-btn:hover { background: #4CAF50; color: #000; }
 
         .main-container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1100px; margin: 0 auto; width: 100%; justify-content: center; align-items: flex-start; }
 
@@ -52,13 +54,17 @@
         .nav-group { display: flex; gap: 10px; margin-top: auto; }
         .nav-btn { flex: 1; background: #2a2a2a; color: #fff; border: 1px solid #3d3d3d; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .nav-btn:hover { border-color: #4CAF50; background: #333; }
+
+        @media (max-width: 500px) {
+            .board-wrapper { width: 100%; height: 320px; }
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="brand-container" onclick="window.location.href='index.html'">
             <div class="brand-logo">◈</div>
-            <div class="brand-title">Quadagon Puzzles</div>
+            <div class="brand-title">Quadagon</div>
         </div>
         <a href="index.html" class="lobby-home-btn">🏠 Main Menu</a>
     </header>
@@ -144,7 +150,6 @@
                 const fenMatch = fullText.match(/\[FEN "([^"]+)"\]/i);
                 const initialFen = fenMatch ? fenMatch[1] : null;
 
-                // Extract move text cleanly
                 let movesText = fullText.replace(/\[.*?\]/g, '').trim();
 
                 if (movesText || initialFen) {
@@ -177,13 +182,11 @@
             $('#puzzleHeader').text(`${pz.title} (${puzzleIndex + 1} / ${loadedPuzzles.length})`);
             $('#puzzleTurn').text(game.turn() === 'w' ? 'White to Move' : 'Black to Move');
             
-            // Hide solution on load
             $('#solutionBox').hide();
             $('#solutionMoves').text('');
         }
 
         function onDrop(source, target) {
-            // Free play mode - test variations freely
             const move = game.move({
                 from: source,
                 to: target,

@@ -3,222 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon - Book Puzzles Training</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <title>Quadagon - Ultimate Chess Suite</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
 
         header {
-            width: 100%; background: #181818; padding: 12px 4%; display: flex;
+            width: 100%; background: #181818; padding: 16px 5%; display: flex;
             justify-content: space-between; align-items: center; border-bottom: 2px solid #2a2a2a;
         }
-        .brand-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .brand-logo { font-size: 1.6rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
-        .brand-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+        .brand-container { display: flex; align-items: center; gap: 12px; }
+        .brand-logo { font-size: 1.8rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .brand-title { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
 
-        .lobby-home-btn {
-            background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; padding: 6px 14px;
-            border-radius: 20px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem;
+        .hero { text-align: center; padding: 50px 20px 30px; }
+        .hero h1 { font-size: 2.5rem; color: #fff; margin-bottom: 12px; font-weight: 800; }
+        .hero p { font-size: 1.1rem; color: #888; max-width: 600px; margin: 0 auto; }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px; max-width: 1100px; margin: 30px auto; padding: 0 20px; width: 100%;
         }
 
-        .main-container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1100px; margin: 0 auto; width: 100%; justify-content: center; align-items: flex-start; }
+        .mode-card {
+            background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 25px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.3s ease; text-decoration: none; color: inherit; position: relative; overflow: hidden;
+        }
+        .mode-card:hover { transform: translateY(-6px); border-color: #4CAF50; box-shadow: 0 12px 30px rgba(76, 175, 80, 0.15); }
 
-        .board-card { background: #1e1e1e; padding: 18px; border-radius: 16px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 14px; }
-        .board-wrapper { width: 440px; height: 440px; position: relative; }
-        #chessboard { width: 100%; height: 100%; }
+        .card-icon { font-size: 2.8rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.4rem; font-weight: bold; color: #fff; margin-bottom: 8px; }
+        .card-desc { font-size: 0.95rem; color: #aaa; line-height: 1.5; margin-bottom: 20px; }
 
-        .board-controls { display: flex; gap: 10px; width: 100%; }
-        .action-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; border: none; transition: 0.2s; }
-        .reset-btn { background: #333; color: #ccc; border: 1px solid #444; }
-        .reset-btn:hover { background: #444; color: #fff; }
-        .done-btn { background: #4CAF50; color: #000; }
-        .done-btn:hover { background: #45a049; }
+        .card-btn {
+            background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; padding: 10px 18px;
+            border-radius: 8px; font-weight: bold; text-align: center; transition: 0.2s; font-size: 0.95rem;
+        }
+        .mode-card:hover .card-btn { background: #4CAF50; color: #000; }
 
-        .sidebar { flex: 1; min-width: 320px; max-width: 420px; background: #1e1e1e; padding: 20px; border-radius: 16px; border: 1px solid #333; display: flex; flex-direction: column; gap: 16px; }
-
-        .upload-section { background: #141414; padding: 16px; border-radius: 10px; border: 2px dashed #4CAF50; text-align: center; }
-        .upload-label { font-size: 0.9rem; color: #fff; font-weight: bold; margin-bottom: 8px; display: block; }
-        input[type="file"] { font-size: 0.85rem; color: #aaa; width: 100%; }
-
-        .info-card { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; text-align: center; }
-        .puzzle-title { font-size: 1.1rem; font-weight: bold; color: #fff; margin-bottom: 4px; }
-        .puzzle-meta { font-size: 0.85rem; color: #4CAF50; font-weight: bold; }
-
-        .solution-card { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #333; display: none; }
-        .solution-title { font-size: 0.9rem; font-weight: bold; color: #4CAF50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .solution-moves { font-family: 'Courier New', Courier, monospace; font-size: 0.95rem; color: #e0e0e0; line-height: 1.5; word-break: break-word; max-height: 180px; overflow-y: auto; padding-right: 5px; }
-
-        .nav-group { display: flex; gap: 10px; margin-top: auto; }
-        .nav-btn { flex: 1; background: #2a2a2a; color: #fff; border: 1px solid #3d3d3d; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .nav-btn:hover { border-color: #4CAF50; background: #333; }
+        footer { margin-top: auto; padding: 20px; text-align: center; color: #555; font-size: 0.85rem; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
     <header>
-        <div class="brand-container" onclick="window.location.href='index.html'">
+        <div class="brand-container">
             <div class="brand-logo">◈</div>
-            <div class="brand-title">Quadagon Puzzles</div>
+            <div class="brand-title">Quadagon</div>
         </div>
-        <a href="index.html" class="lobby-home-btn">🏠 Main Menu</a>
     </header>
 
-    <div class="main-container">
-        <div class="board-card">
-            <div class="board-wrapper">
-                <div id="chessboard"></div>
-            </div>
-            <div class="board-controls">
-                <button class="action-btn reset-btn" onclick="resetBoard()">🔄 Reset Board</button>
-                <button class="action-btn done-btn" onclick="showSolution()">✅ Done / Solution</button>
-            </div>
-        </div>
-
-        <div class="sidebar">
-            <div class="upload-section">
-                <span class="upload-label">📂 Upload Any Chess Book PGN File</span>
-                <input type="file" id="pgnFileInput" accept=".pgn" onchange="handlePgnUpload(event)">
-            </div>
-
-            <div class="info-card">
-                <div class="puzzle-title" id="puzzleHeader">No PGN File Loaded</div>
-                <div class="puzzle-meta" id="puzzleTurn">Please upload your PGN file above</div>
-            </div>
-
-            <div class="solution-card" id="solutionBox">
-                <div class="solution-title">📖 Solution & Continuation</div>
-                <div class="solution-moves" id="solutionMoves">--</div>
-            </div>
-
-            <div class="nav-group">
-                <button class="nav-btn" onclick="prevPuzzle()">⏮️ Previous</button>
-                <button class="nav-btn" onclick="nextPuzzle()">Next ⏭️</button>
-            </div>
-        </div>
+    <div class="hero">
+        <h1>Master Your Chess Journey</h1>
+        <p>Select your mode to analyze games, solve book tactics, or battle against customized engines.</p>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+    <div class="cards-container">
+        <!-- Book Puzzles Training Mode -->
+        <a href="puzzles.html" class="mode-card">
+            <div>
+                <div class="card-icon">📖</div>
+                <div class="card-title">Book Puzzles Mode</div>
+                <div class="card-desc">Upload custom PGNs from chess books, solve position puzzles, hide/reveal solution continuations, and track progress.</div>
+            </div>
+            <div class="card-btn">Start Puzzles ➔</div>
+        </a>
 
-    <script>
-        let board = null;
-        let game = new Chess();
-        let loadedPuzzles = [];
-        let puzzleIndex = 0;
+        <!-- Play vs Engine -->
+        <a href="#" class="mode-card" onclick="alert('Play vs Engine coming in next update!'); return false;">
+            <div>
+                <div class="card-icon">🤖</div>
+                <div class="card-title">Play vs Stockfish</div>
+                <div class="card-desc">Challenge Stockfish with adjustable ELO ratings, customizable time controls, and live position assessment.</div>
+            </div>
+            <div class="card-btn">Play Engine ➔</div>
+        </a>
 
-        $(document).ready(function() {
-            board = Chessboard('chessboard', {
-                draggable: true,
-                position: 'start',
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                onSnapEnd: onSnapEnd
-            });
-        });
+        <!-- Position Analysis -->
+        <a href="#" class="mode-card" onclick="alert('Analysis Board coming in next update!'); return false;">
+            <div>
+                <div class="card-icon">🔍</div>
+                <div class="card-title">Analysis Board</div>
+                <div class="card-desc">Setup any FEN, import game PGNs, explore evaluation graphs, and analyze key tactics with depth engine.</div>
+            </div>
+            <div class="card-btn">Analyze Position ➔</div>
+        </a>
+    </div>
 
-        function onDragStart(source, piece) {
-            if (game.game_over() || loadedPuzzles.length === 0) return false;
-        }
-
-        function handlePgnUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                parsePgnData(e.target.result);
-            };
-            reader.readAsText(file);
-        }
-
-        function parsePgnData(pgnText) {
-            const rawGames = pgnText.split(/\[Event /gi);
-            loadedPuzzles = [];
-
-            rawGames.forEach((gText) => {
-                if (!gText.trim()) return;
-                const fullText = '[Event ' + gText;
-
-                const fenMatch = fullText.match(/\[FEN "([^"]+)"\]/i);
-                const initialFen = fenMatch ? fenMatch[1] : null;
-
-                let movesText = fullText.replace(/\[.*?\]/g, '').trim();
-
-                if (movesText || initialFen) {
-                    loadedPuzzles.push({
-                        id: loadedPuzzles.length + 1,
-                        fen: initialFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-                        rawMoves: movesText || 'No notation supplied.',
-                        title: `Puzzle #${loadedPuzzles.length + 1}`
-                    });
-                }
-            });
-
-            if (loadedPuzzles.length > 0) {
-                puzzleIndex = 0;
-                loadPuzzle();
-                alert(`Successfully loaded ${loadedPuzzles.length} puzzles!`);
-            } else {
-                alert('Could not parse PGN file.');
-            }
-        }
-
-        function loadPuzzle() {
-            if (loadedPuzzles.length === 0) return;
-            const pz = loadedPuzzles[puzzleIndex];
-
-            game.load(pz.fen);
-            board.orientation(game.turn() === 'w' ? 'white' : 'black');
-            board.position(pz.fen);
-
-            $('#puzzleHeader').text(`${pz.title} (${puzzleIndex + 1} / ${loadedPuzzles.length})`);
-            $('#puzzleTurn').text(game.turn() === 'w' ? 'White to Move' : 'Black to Move');
-            
-            $('#solutionBox').hide();
-            $('#solutionMoves').text('');
-        }
-
-        function onDrop(source, target) {
-            const move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q'
-            });
-
-            if (move === null) return 'snapback';
-        }
-
-        function onSnapEnd() {
-            board.position(game.fen());
-        }
-
-        function resetBoard() {
-            if (loadedPuzzles.length === 0) return;
-            loadPuzzle();
-        }
-
-        function showSolution() {
-            if (loadedPuzzles.length === 0) return;
-            const pz = loadedPuzzles[puzzleIndex];
-            $('#solutionMoves').text(pz.rawMoves);
-            $('#solutionBox').slideDown();
-        }
-
-        function nextPuzzle() {
-            if (puzzleIndex < loadedPuzzles.length - 1) {
-                puzzleIndex++;
-                loadPuzzle();
-            }
-        }
-
-        function prevPuzzle() {
-            if (puzzleIndex > 0) {
-                puzzleIndex--;
-                loadPuzzle();
-            }
-        }
-    </script>
+    <footer>
+        Quadagon Chess Suite &copy; 2026. Built for serious chess players.
+    </footer>
 </body>
 </html>
