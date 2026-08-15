@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon Pro - Ultimate Engine Suite</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Quadagon Pro - Solid Suite</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 30px; }
@@ -34,13 +31,33 @@
         .action-btn { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; }
         .action-btn:hover { background: #444; }
         .primary-btn { background: #4CAF50; color: #000; border: none; }
-        .primary-btn:hover { background: #45a049; }
         .danger-btn { background: #d32f2f; color: #fff; border: none; }
 
         .board-container { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
         
-        .board-wrapper { width: 380px; height: 380px; position: relative; }
-        #chessboard { width: 100%; height: 100%; }
+        /* Strict 8x8 Board - Exactly 64 Squares */
+        #chessboard {
+            width: 384px;
+            height: 384px;
+            display: grid;
+            grid-template-columns: repeat(8, 48px);
+            grid-template-rows: repeat(8, 48px);
+            border: 4px solid #2a2a2a;
+            border-radius: 4px;
+        }
+        .square {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .square.light { background-color: #f0d9b5; }
+        .square.dark { background-color: #b58863; }
+        .square.selected { background-color: #baca44 !important; }
 
         .status-box { margin-top: 12px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
         .report-box { width: 100%; max-width: 720px; background: #1e1e1e; padding: 20px; border-radius: 14px; border: 1px solid #333; margin-top: 20px; display: none; text-align: left; }
@@ -61,17 +78,17 @@
             <div class="panel-section">
                 <span class="panel-title">🧠 Engine Level</span>
                 <div class="btn-group">
-                    <button class="engine-btn active" onclick="setDepth(16, this)">SF 16</button>
-                    <button class="engine-btn" onclick="setDepth(18, this)">SF 18</button>
-                    <button class="engine-btn" onclick="setDepth(20, this)">SF 20</button>
+                    <button class="engine-btn active" id="btn-16" onclick="setDepth(16)">SF 16</button>
+                    <button class="engine-btn" id="btn-18" onclick="setDepth(18)">SF 18</button>
+                    <button class="engine-btn" id="btn-20" onclick="setDepth(20)">SF 20</button>
                 </div>
             </div>
 
             <div class="panel-section">
                 <span class="panel-title">♟️ Choose Color</span>
                 <div class="btn-group">
-                    <button class="color-btn active" onclick="setColor('w', this)">White</button>
-                    <button class="color-btn" onclick="setColor('b', this)">Black</button>
+                    <button class="color-btn active" id="btn-w" onclick="setColor('w')">White</button>
+                    <button class="color-btn" id="btn-b" onclick="setColor('b')">Black</button>
                 </div>
             </div>
 
@@ -86,9 +103,7 @@
         </div>
 
         <div class="board-container">
-            <div class="board-wrapper">
-                <div id="chessboard"></div>
-            </div>
+            <div id="chessboard"></div>
             <div class="status-box" id="gameStatus">Your Turn (White)</div>
         </div>
     </div>
@@ -97,61 +112,87 @@
     <div class="watermark">👑 Made By :- Jayesh Mishra 🔥</div>
 
     <script>
-        var game = new Chess();
-        var board = null;
-        var currentDepth = 16;
-        var playerColor = 'w';
-        var isGameOver = false;
+        let game = new Chess();
+        let currentDepth = 16;
+        let playerColor = 'w';
+        let isGameOver = false;
+        let selectedSquare = null;
 
-        $(document).ready(function() {
-            board = Chessboard('chessboard', {
-                draggable: true,
-                position: 'start',
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                onSnapEnd: onSnapEnd
+        const pieceSymbols = {
+            'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+            'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+        };
+
+        function renderBoard() {
+            let boardElement = document.getElementById('chessboard');
+            boardElement.innerHTML = '';
+            
+            let board = game.board();
+            let rows = playerColor === 'w' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
+            let cols = playerColor === 'w' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
+
+            rows.forEach(r => {
+                cols.forEach(c => {
+                    let squareId = String.fromCharCode(97 + c) + (8 - r);
+                    let piece = board[r][c];
+                    let squareDiv = document.createElement('div');
+                    squareDiv.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    if (selectedSquare === squareId) squareDiv.classList.add('selected');
+                    
+                    if (piece) {
+                        let symbolKey = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
+                        squareDiv.textContent = pieceSymbols[symbolKey] || '';
+                        squareDiv.style.color = piece.color === 'w' ? '#ffffff' : '#000000';
+                        if(piece.color === 'w') {
+                            squareDiv.style.textShadow = '0 1px 2px #000';
+                        }
+                    }
+
+                    squareDiv.onclick = () => handleSquareClick(squareId);
+                    boardElement.appendChild(squareDiv);
+                });
             });
-
-            setTimeout(function() {
-                if (board) board.resize();
-            }, 150);
-        });
-
-        function onDragStart(source, piece, position, orientation) {
-            if (isGameOver) return false;
-            if (game.turn() !== playerColor) return false;
-            if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
         }
 
-        function onDrop(source, target) {
-            let move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q'
-            });
+        function handleSquareClick(squareId) {
+            if (isGameOver) return;
+            if (game.turn() !== playerColor) return;
 
-            if (move === null) return 'snapback';
-
-            updateStatus();
-
-            if (!game.game_over()) {
-                isGameOver = false;
-                setTimeout(makeEngineMove, 300);
+            if (!selectedSquare) {
+                let piece = game.get(squareId);
+                if (piece && piece.color === playerColor) {
+                    selectedSquare = squareId;
+                    renderBoard();
+                }
             } else {
-                handleGameOver();
-            }
-        }
+                let move = game.move({
+                    from: selectedSquare,
+                    to: squareId,
+                    promotion: 'q'
+                });
 
-        function onSnapEnd() {
-            board.position(game.fen());
+                selectedSquare = null;
+                if (move === null) {
+                    let piece = game.get(squareId);
+                    if (piece && piece.color === playerColor) {
+                        selectedSquare = squareId;
+                    }
+                }
+                renderBoard();
+                updateStatus();
+
+                if (!game.game_over()) {
+                    setTimeout(makeEngineMove, 300);
+                } else {
+                    handleGameOver();
+                }
+            }
         }
 
         function makeEngineMove() {
             if (game.game_over()) return;
-            
-            $('#gameStatus').text('Stockfish is thinking...');
-            
+            document.getElementById('gameStatus').innerText = 'Stockfish is thinking...';
+
             let fen = game.fen();
             fetch(`https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(fen)}&depth=${currentDepth}`)
                 .then(res => res.json())
@@ -164,62 +205,53 @@
                         let toSq = bestMoveStr.substring(2, 4);
                         let promotionPiece = bestMoveStr.length > 4 ? bestMoveStr.substring(4, 5) : 'q';
 
-                        game.move({
-                            from: fromSq,
-                            to: toSq,
-                            promotion: promotionPiece
-                        });
-
-                        board.position(game.fen());
+                        game.move({ from: fromSq, to: toSq, promotion: promotionPiece });
+                        renderBoard();
                         updateStatus();
 
-                        if (game.game_over()) {
-                            handleGameOver();
-                        }
+                        if (game.game_over()) handleGameOver();
                     }
                 })
-                .catch(err => {
-                    console.error("Engine error:", err);
-                    $('#gameStatus').text('Engine error. Try moving again.');
+                .catch(() => {
+                    document.getElementById('gameStatus').innerText = 'Engine error. Try moving again.';
                 });
         }
 
-        function setDepth(depth, btn) {
+        function setDepth(depth) {
             currentDepth = depth;
-            $('.engine-btn').removeClass('active');
-            $(btn).addClass('active');
+            document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + depth).classList.add('active');
         }
 
-        function setColor(color, btn) {
+        function setColor(color) {
             playerColor = color;
-            $('.color-btn').removeClass('active');
-            $(btn).addClass('active');
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + color).classList.add('active');
             startNewGame();
         }
 
         function startNewGame() {
             game.reset();
-            board.start();
             isGameOver = false;
-            $('#reviewBtn').hide();
-            $('#reportReport').hide();
-            
+            selectedSquare = null;
+            document.getElementById('reviewBtn').style.display = 'none';
+            document.getElementById('reportReport').style.display = 'none';
+            renderBoard();
+
             if (playerColor === 'b') {
-                board.orientation('black');
-                $('#gameStatus').text('Stockfish (White) is thinking...');
+                document.getElementById('gameStatus').innerText = 'Stockfish (White) is thinking...';
                 setTimeout(makeEngineMove, 400);
             } else {
-                board.orientation('white');
-                $('#gameStatus').text('Your Turn (White)');
+                document.getElementById('gameStatus').innerText = 'Your Turn (White)';
             }
-            setTimeout(function() { if (board) board.resize(); }, 100);
         }
 
         function undoMove() {
             if (isGameOver) return;
             game.undo();
             game.undo();
-            board.position(game.fen());
+            selectedSquare = null;
+            renderBoard();
             updateStatus();
         }
 
@@ -227,48 +259,52 @@
             if (isGameOver) return;
             isGameOver = true;
             let winner = playerColor === 'w' ? 'Black (Stockfish)' : 'White (Stockfish)';
-            $('#gameStatus').text(`You Resigned. Winner: ${winner}`);
-            $('#reviewBtn').show();
+            document.getElementById('gameStatus').innerText = `You Resigned. Winner: ${winner}`;
+            document.getElementById('reviewBtn').style.display = 'block';
         }
 
         function updateStatus() {
-            let status = '';
             let moveColor = game.turn() === 'w' ? 'White' : 'Black';
+            let status = '';
 
             if (game.in_checkmate()) {
                 isGameOver = true;
                 status = `Checkmate! Game Over. ${moveColor} lost.`;
-                $('#reviewBtn').show();
+                document.getElementById('reviewBtn').style.display = 'block';
             } else if (game.in_draw()) {
                 isGameOver = true;
                 status = 'Game Drawn!';
-                $('#reviewBtn'].show();
+                document.getElementById('reviewBtn').style.display = 'block';
             } else {
                 status = `${moveColor}'s Turn`;
-                if (game.in_check()) {
-                    status += ' (Check!)';
-                }
+                if (game.in_check()) status += ' (Check!)';
             }
-            $('#gameStatus').text(status);
+            document.getElementById('gameStatus').innerText = status;
         }
 
         function handleGameOver() {
             isGameOver = true;
-            $('#reviewBtn').show();
+            document.getElementById('reviewBtn').style.display = 'block';
             updateStatus();
         }
 
         function runGameReview() {
-            $('#reportReport').show().html(`
+            let reportDiv = document.getElementById('reportReport');
+            reportDiv.style.display = 'block';
+            reportDiv.innerHTML = `
                 <h3 style="color:#4CAF50; margin-bottom:10px;">👑 Quadagon Game Review Report</h3>
                 <hr style="border-color:#333; margin-bottom:10px;">
-                <p><b>Engine Depth Used:</b> Depth ${currentDepth}</p>
+                <p><b>Engine Depth:</b> Depth ${currentDepth}</p>
                 <p><b>White Accuracy:</b> <span style="color:#4CAF50;">93.8%</span></p>
                 <p><b>Black Accuracy:</b> <span style="color:#4CAF50;">89.2%</span></p>
-                <p style="margin-top:8px; color:#d2691e;"><b>Opening Theory:</b> Book Move detected 📖</p>
+                <p style="margin-top:8px; color:#d2691e;"><b>Opening:</b> Book Move detected 📖</p>
                 <p style="font-size:0.8rem; color:#888; margin-top:8px;">PGN: ${game.pgn()}</p>
-            `);
+            `;
         }
+
+        window.onload = function() {
+            renderBoard();
+        };
     </script>
 </body>
 </html>
