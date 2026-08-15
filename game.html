@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon Pro - Native Engine Suite</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Quadagon Pro - Pure Vanilla Suite</title>
+    <!-- Embedded chess.js to avoid CDN failures -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -36,7 +36,6 @@
 
         .board-container { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
         
-        /* Native CSS Grid Chessboard */
         #chessboard {
             width: 400px;
             height: 400px;
@@ -50,12 +49,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            font-size: 2.3rem;
             cursor: pointer;
             user-select: none;
         }
-        .square.light { background-color: #f0d9b5; color: #000; }
-        .square.dark { background-color: #b58863; color: #000; }
+        .square.light { background-color: #f0d9b5; }
+        .square.dark { background-color: #b58863; }
         .square.selected { background-color: #baca44 !important; }
 
         .status-box { margin-top: 12px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
@@ -77,17 +76,17 @@
             <div class="panel-section">
                 <span class="panel-title">🧠 Engine Level</span>
                 <div class="btn-group">
-                    <button class="engine-btn active" onclick="setDepth(16, this)">SF 16</button>
-                    <button class="engine-btn" onclick="setDepth(18, this)">SF 18</button>
-                    <button class="engine-btn" onclick="setDepth(20, this)">SF 20</button>
+                    <button class="engine-btn active" id="btn-16" onclick="setDepth(16)">SF 16</button>
+                    <button class="engine-btn" id="btn-18" onclick="setDepth(18)">SF 18</button>
+                    <button class="engine-btn" id="btn-20" onclick="setDepth(20)">SF 20</button>
                 </div>
             </div>
 
             <div class="panel-section">
                 <span class="panel-title">♟️ Choose Color</span>
                 <div class="btn-group">
-                    <button class="color-btn active" onclick="setColor('w', this)">White</button>
-                    <button class="color-btn" onclick="setColor('b', this)">Black</button>
+                    <button class="color-btn active" id="btn-w" onclick="setColor('w')">White</button>
+                    <button class="color-btn" id="btn-b" onclick="setColor('b')">Black</button>
                 </div>
             </div>
 
@@ -111,11 +110,11 @@
     <div class="watermark">👑 Made By :- Jayesh Mishra 🔥</div>
 
     <script>
-        var game = new Chess();
-        var currentDepth = 16;
-        var playerColor = 'w';
-        var isGameOver = false;
-        var selectedSquare = null;
+        let game = new Chess();
+        let currentDepth = 16;
+        let playerColor = 'w';
+        let isGameOver = false;
+        let selectedSquare = null;
 
         const pieceSymbols = {
             'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
@@ -141,12 +140,8 @@
                     if (piece) {
                         let symbolKey = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
                         squareDiv.textContent = pieceSymbols[symbolKey] || '';
-                        if(piece.color === 'w') {
-                            squareDiv.style.color = '#fff';
-                            squareDiv.style.textShadow = '0 0 2px #000';
-                        } else {
-                            squareDiv.style.color = '#000';
-                        }
+                        squareDiv.style.color = piece.color === 'w' ? '#fff' : '#000';
+                        if(piece.color === 'w') squareDiv.style.textShadow = '0 0 2px #000';
                     }
 
                     squareDiv.onclick = () => handleSquareClick(squareId);
@@ -192,7 +187,7 @@
 
         function makeEngineMove() {
             if (game.game_over()) return;
-            $('#gameStatus').text('Stockfish is thinking...');
+            document.getElementById('gameStatus').innerText = 'Stockfish is thinking...';
 
             let fen = game.fen();
             fetch(`https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(fen)}&depth=${currentDepth}`)
@@ -213,19 +208,21 @@
                         if (game.game_over()) handleGameOver();
                     }
                 })
-                .catch(() => $('#gameStatus').text('Engine error. Try again.'));
+                .catch(() => {
+                    document.getElementById('gameStatus').innerText = 'Engine error. Try moving again.';
+                });
         }
 
-        function setDepth(depth, btn) {
+        function setDepth(depth) {
             currentDepth = depth;
-            $('.engine-btn').removeClass('active');
-            $(btn).addClass('active');
+            document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + depth).classList.add('active');
         }
 
-        function setColor(color, btn) {
+        function setColor(color) {
             playerColor = color;
-            $('.color-btn').removeClass('active');
-            $(btn).addClass('active');
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + color).classList.add('active');
             startNewGame();
         }
 
@@ -233,15 +230,15 @@
             game.reset();
             isGameOver = false;
             selectedSquare = null;
-            $('#reviewBtn').hide();
-            $('#reportReport').hide();
+            document.getElementById('reviewBtn').style.display = 'none';
+            document.getElementById('reportReport').style.display = 'none';
             renderBoard();
 
             if (playerColor === 'b') {
-                $('#gameStatus').text('Stockfish (White) is thinking...');
+                document.getElementById('gameStatus').innerText = 'Stockfish (White) is thinking...';
                 setTimeout(makeEngineMove, 400);
             } else {
-                $('#gameStatus').text('Your Turn (White)');
+                document.getElementById('gameStatus').innerText = 'Your Turn (White)';
             }
         }
 
@@ -258,37 +255,39 @@
             if (isGameOver) return;
             isGameOver = true;
             let winner = playerColor === 'w' ? 'Black (Stockfish)' : 'White (Stockfish)';
-            $('#gameStatus').text(`You Resigned. Winner: ${winner}`);
-            $('#reviewBtn').show();
+            document.getElementById('gameStatus').innerText = `You Resigned. Winner: ${winner}`;
+            document.getElementById('reviewBtn').style.display = 'block';
         }
 
         function updateStatus() {
-            let status = '';
             let moveColor = game.turn() === 'w' ? 'White' : 'Black';
+            let status = '';
 
             if (game.in_checkmate()) {
                 isGameOver = true;
                 status = `Checkmate! Game Over. ${moveColor} lost.`;
-                $('#reviewBtn').show();
+                document.getElementById('reviewBtn').style.display = 'block';
             } else if (game.in_draw()) {
                 isGameOver = true;
                 status = 'Game Drawn!';
-                $('#reviewBtn'].show();
+                document.getElementById('reviewBtn').style.display = 'block';
             } else {
                 status = `${moveColor}'s Turn`;
                 if (game.in_check()) status += ' (Check!)';
             }
-            $('#gameStatus').text(status);
+            document.getElementById('gameStatus').innerText = status;
         }
 
         function handleGameOver() {
             isGameOver = true;
-            $('#reviewBtn').show();
+            document.getElementById('reviewBtn').style.display = 'block';
             updateStatus();
         }
 
         function runGameReview() {
-            $('#reportReport').show().html(`
+            let reportDiv = document.getElementById('reportReport');
+            reportDiv.style.display = 'block';
+            reportDiv.innerHTML = `
                 <h3 style="color:#4CAF50; margin-bottom:10px;">👑 Quadagon Game Review Report</h3>
                 <hr style="border-color:#333; margin-bottom:10px;">
                 <p><b>Engine Depth:</b> Depth ${currentDepth}</p>
@@ -296,13 +295,13 @@
                 <p><b>Black Accuracy:</b> <span style="color:#4CAF50;">89.2%</span></p>
                 <p style="margin-top:8px; color:#d2691e;"><b>Opening:</b> Book Move detected 📖</p>
                 <p style="font-size:0.8rem; color:#888; margin-top:8px;">PGN: ${game.pgn()}</p>
-            `);
+            `;
         }
 
-        // Initialize board on load
-        $(document).ready(() => {
+        // Initialize on load
+        window.onload = function() {
             renderBoard();
-        });
+        };
     </script>
 </body>
 </html>
