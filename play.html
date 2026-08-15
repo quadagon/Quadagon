@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon - Play vs Stockfish</title>
+    <title>Quadagon - Play vs Stockfish Engine</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -30,32 +30,31 @@
         .board-wrapper { width: 440px; height: 440px; position: relative; }
         #chessboard { width: 100%; height: 100%; }
 
-        .board-controls { display: flex; gap: 10px; width: 100%; }
-        .action-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; border: none; transition: 0.2s; }
-        .undo-btn { background: #333; color: #ccc; border: 1px solid #444; }
-        .undo-btn:hover { background: #444; color: #fff; }
-        .newgame-btn { background: #4CAF50; color: #000; }
-        .newgame-btn:hover { background: #45a049; }
-        .flip-btn { background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; }
-        .flip-btn:hover { background: #4CAF50; color: #000; }
+        /* Highlight Square Styling */
+        .selected-square { background-color: rgba(76, 175, 80, 0.5) !important; }
 
-        .sidebar { flex: 1; min-width: 320px; max-width: 420px; background: #1e1e1e; padding: 20px; border-radius: 16px; border: 1px solid #333; display: flex; flex-direction: column; gap: 16px; }
+        .board-controls { display: flex; gap: 8px; width: 100%; }
+        .action-btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; border: none; transition: 0.2s; background: #2a2a2a; color: #fff; border: 1px solid #3d3d3d; }
+        .action-btn:hover { border-color: #4CAF50; background: #333; }
+        .reset-btn { background: #333; color: #ccc; }
 
-        .setting-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; }
-        .setting-label { font-size: 0.85rem; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+        .sidebar { flex: 1; min-width: 300px; max-width: 400px; background: #1e1e1e; padding: 20px; border-radius: 16px; border: 1px solid #333; display: flex; flex-direction: column; gap: 16px; }
+
+        .config-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; display: flex; flex-direction: column; gap: 10px; }
+        .config-title { font-size: 0.85rem; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        select { width: 100%; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; font-size: 0.95rem; outline: none; }
-        select:focus { border-color: #4CAF50; }
+        .opt-group { display: flex; gap: 10px; }
+        .opt-btn { flex: 1; padding: 8px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold; text-align: center; }
+        .opt-btn.active { background: #4CAF50; color: #000; border-color: #4CAF50; }
 
-        .status-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; text-align: center; }
-        .status-title { font-size: 1rem; font-weight: bold; color: #fff; margin-bottom: 4px; }
-        .status-eval { font-size: 0.85rem; color: #4CAF50; font-weight: bold; }
+        .status-box { background: #141414; padding: 12px; border-radius: 10px; border: 1px solid #2a2a2a; text-align: center; font-weight: bold; color: #4CAF50; }
 
-        .moves-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #333; flex: 1; min-height: 150px; display: flex; flex-direction: column; }
+        .moves-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #333; flex: 1; min-height: 160px; display: flex; flex-direction: column; }
         .moves-title { font-size: 0.85rem; font-weight: bold; color: #4CAF50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .moves-list { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; color: #e0e0e0; line-height: 1.6; overflow-y: auto; max-height: 160px; word-break: break-word; }
+        .moves-list { font-family: 'Courier New', Courier, monospace; font-size: 0.88rem; color: #e0e0e0; line-height: 1.8; overflow-y: auto; max-height: 180px; word-break: break-word; }
 
         footer { margin-top: auto; padding: 15px; text-align: center; color: #666; font-size: 0.8rem; border-top: 1px solid #222; width: 100%; }
+        footer a { color: #4CAF50; text-decoration: none; }
 
         @media (max-width: 500px) {
             .board-wrapper { width: 100%; height: 320px; }
@@ -77,44 +76,45 @@
                 <div id="chessboard"></div>
             </div>
             <div class="board-controls">
-                <button class="action-btn undo-btn" onclick="undoMove()">↩️ Undo</button>
-                <button class="action-btn flip-btn" onclick="flipBoard()">🔄 Flip</button>
-                <button class="action-btn newgame-btn" onclick="resetGame()">🎮 New Game</button>
+                <button class="action-btn reset-btn" onclick="resetGame()">🔄 Reset</button>
+                <button class="action-btn" onclick="undoMove()">↩️ Undo</button>
+                <button class="action-btn" onclick="flipBoard()">🔄 Flip</button>
             </div>
         </div>
 
         <div class="sidebar">
-            <div class="setting-box">
-                <label class="setting-label">🤖 Select Stockfish Engine Level</label>
-                <select id="engineLevel" onchange="changeDifficulty()">
-                    <option value="1">Level 1: Beginner (Friendly ~1000 ELO)</option>
-                    <option value="5" selected>Level 2: Intermediate (Club ~1600 ELO)</option>
-                    <option value="12">Level 3: Master (Stockfish GM ~2400+ ELO)</option>
-                </select>
+            <div class="config-box">
+                <div class="config-title">Engine Level</div>
+                <div class="opt-group">
+                    <div class="opt-btn active" onclick="setDepth(5, this)">Beginner</div>
+                    <div class="opt-btn" onclick="setDepth(10, this)">Club</div>
+                    <div class="opt-btn" onclick="setDepth(15, this)">Master</div>
+                </div>
+
+                <div class="config-title" style="margin-top: 6px;">Play As</div>
+                <div class="opt-group">
+                    <div class="opt-btn active" onclick="setUserColor('w', this)">White</div>
+                    <div class="opt-btn" onclick="setUserColor('b', this)">Black</div>
+                </div>
             </div>
 
-            <div class="setting-box">
-                <label class="setting-label">♟️ Play As Color</label>
-                <select id="playerColor" onchange="changeColor()">
-                    <option value="w" selected>White (First Move)</option>
-                    <option value="b">Black (Second Move)</option>
-                </select>
-            </div>
-
-            <div class="status-box">
-                <div class="status-title" id="gameStatus">Your Turn</div>
-                <div class="status-eval" id="engineStatus">Stockfish Ready</div>
-            </div>
+            <div class="status-box" id="gameStatus">Your Turn (White)</div>
 
             <div class="moves-box">
-                <div class="moves-title">📜 Notation Log</div>
+                <div class="moves-title">📜 Game Moves History</div>
                 <div class="moves-list" id="movesList">1. ...</div>
             </div>
         </div>
     </div>
 
     <footer>
-        Quadagon Chess Suite &copy; 2026 | Powered by Stockfish API & Chessboard.js
+        <p><b>Quadagon Chess Suite</b> &copy; 2026. All Rights Reserved.</p>
+        <p style="font-size: 0.75rem; margin-top: 4px; color: #555;">
+            Powered by Open-Source Technologies: 
+            <a href="https://github.com/jhlywa/chess.js" target="_blank">Chess.js</a> | 
+            <a href="https://chessboardjs.com/" target="_blank">Chessboard.js</a> | 
+            <a href="https://stockfishonline.com" target="_blank">Stockfish API</a>
+        </p>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -124,13 +124,11 @@
     <script>
         let board = null;
         let game = new Chess();
-        let playerColor = 'w';
+        let userColor = 'w';
         let engineDepth = 5;
-        let isEngineThinking = false;
+        let selectedSquare = null;
 
-        function goToLobby() {
-            window.location.href = 'index.html';
-        }
+        function goToLobby() { window.location.href = 'index.html'; }
 
         $(document).ready(function() {
             board = Chessboard('chessboard', {
@@ -141,152 +139,159 @@
                 onDrop: onDrop,
                 onSnapEnd: onSnapEnd
             });
-            updateStatus();
+
+            // Tap & Touch Click-to-Move Event Bindings
+            $('#chessboard').on('click', '.square-55d63', function() {
+                const square = $(this).attr('data-square');
+                handleSquareClick(square);
+            });
         });
 
-        function onDragStart(source, piece, position, orientation) {
-            if (game.game_over() || isEngineThinking) return false;
-            if ((playerColor === 'w' && piece.search(/^b/) !== -1) ||
-                (playerColor === 'b' && piece.search(/^w/) !== -1)) {
+        function clearSelectedSquare() {
+            $('.square-55d63').removeClass('selected-square');
+            selectedSquare = null;
+        }
+
+        function handleSquareClick(square) {
+            if (game.game_over() || game.turn() !== userColor) return;
+
+            if (selectedSquare === null) {
+                const piece = game.get(square);
+                if (piece && piece.color === userColor) {
+                    selectedSquare = square;
+                    $(`.square-${square}`).addClass('selected-square');
+                }
+            } else {
+                const source = selectedSquare;
+                const target = square;
+                clearSelectedSquare();
+
+                if (source === target) return;
+
+                const move = game.move({ from: source, to: target, promotion: 'q' });
+                if (move !== null) {
+                    board.position(game.fen());
+                    renderHistory();
+                    checkGameState();
+                    if (!game.game_over() && game.turn() !== userColor) {
+                        makeEngineMove();
+                    }
+                } else {
+                    const piece = game.get(square);
+                    if (piece && piece.color === userColor) {
+                        selectedSquare = square;
+                        $(`.square-${square}`).addClass('selected-square');
+                    }
+                }
+            }
+        }
+
+        function onDragStart(source, piece) {
+            if (game.game_over() || (game.turn() === 'w' && piece.search(/^b/) !== -1) || (game.turn() === 'b' && piece.search(/^w/) !== -1) || game.turn() !== userColor) {
                 return false;
             }
         }
 
         function onDrop(source, target) {
-            const move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q'
-            });
-
+            clearSelectedSquare();
+            const move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
-            updateStatus();
-            if (!game.game_over()) {
-                setTimeout(makeEngineMove, 300);
+            renderHistory();
+            checkGameState();
+            if (!game.game_over() && game.turn() !== userColor) {
+                makeEngineMove();
             }
         }
 
-        function onSnapEnd() {
-            board.position(game.fen());
-        }
+        function onSnapEnd() { board.position(game.fen()); }
 
         function makeEngineMove() {
-            if (game.game_over()) return;
-
-            isEngineThinking = true;
-            $('#engineStatus').text('Stockfish is thinking...');
-
+            $('#gameStatus').text('Stockfish is thinking... 🤔');
             const fen = encodeURIComponent(game.fen());
             const url = `https://stockfish.online/api/s/v2.php?fen=${fen}&depth=${engineDepth}`;
 
             fetch(url)
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    isEngineThinking = false;
                     if (data && data.success && data.bestmove) {
-                        const bestMoveStr = data.bestmove.split(' ')[1];
-                        if (bestMoveStr) {
-                            const fromSquare = bestMoveStr.substring(0, 2);
-                            const toSquare = bestMoveStr.substring(2, 4);
-                            const promotion = bestMoveStr.length > 4 ? bestMoveStr.substring(4, 5) : 'q';
+                        const moveArr = data.bestmove.split(' ');
+                        const bestMove = moveArr[1];
+                        const from = bestMove.substring(0, 2);
+                        const to = bestMove.substring(2, 4);
+                        const promo = bestMove.length > 4 ? bestMove.substring(4, 5) : 'q';
 
-                            game.move({
-                                from: fromSquare,
-                                to: toSquare,
-                                promotion: promotion
-                            });
-
-                            board.position(game.fen());
-                            updateStatus();
-                            $('#engineStatus').text(`Stockfish Depth ${engineDepth}`);
-                        }
-                    } else {
-                        makeFallbackMove();
+                        game.move({ from: from, to: to, promotion: promo });
+                        board.position(game.fen());
+                        renderHistory();
+                        checkGameState();
                     }
                 })
-                .catch(err => {
-                    isEngineThinking = false;
-                    makeFallbackMove();
+                .catch(() => {
+                    const moves = game.moves();
+                    const randomMove = moves[Math.floor(Math.random() * moves.length)];
+                    game.move(randomMove);
+                    board.position(game.fen());
+                    renderHistory();
+                    checkGameState();
                 });
         }
 
-        function makeFallbackMove() {
-            const possibleMoves = game.moves();
-            if (possibleMoves.length === 0) return;
-            const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-            game.move(randomMove);
-            board.position(game.fen());
-            updateStatus();
-            $('#engineStatus').text('Stockfish Ready (Fallback)');
-        }
-
-        function updateStatus() {
-            let statusStr = '';
-            let moveColor = game.turn() === 'w' ? 'White' : 'Black';
-
+        function checkGameState() {
             if (game.in_checkmate()) {
-                statusStr = `Game Over! ${moveColor} is in checkmate.`;
+                $('#gameStatus').text(game.turn() === userColor ? 'Checkmate! You Lost ❌' : 'Checkmate! You Won 🎉');
             } else if (game.in_draw()) {
-                statusStr = 'Game Over! Draw position.';
+                $('#gameStatus').text('Game Drawn 🤝');
             } else {
-                statusStr = `${moveColor} to move`;
-                if (game.in_check()) {
-                    statusStr += ' (In Check!)';
-                }
+                $('#gameStatus').text(game.turn() === userColor ? 'Your Turn' : 'Engine Turn');
             }
-
-            $('#gameStatus').text(statusStr);
-            renderMoveHistory();
         }
 
-        function renderMoveHistory() {
+        function renderHistory() {
             const history = game.history();
-            let movesHTML = '';
+            let html = '';
             for (let i = 0; i < history.length; i += 2) {
                 const moveNo = Math.floor(i / 2) + 1;
-                const whiteMove = history[i] || '';
-                const blackMove = history[i + 1] || '';
-                movesHTML += `<b>${moveNo}.</b> ${whiteMove} ${blackMove} &nbsp;&nbsp; `;
+                const wMove = history[i] || '';
+                const bMove = history[i + 1] || '';
+                html += `<b>${moveNo}.</b> ${wMove} ${bMove} &nbsp;&nbsp;`;
             }
-            $('#movesList').html(movesHTML || '1. ...');
-            const movesDiv = document.getElementById('movesList');
-            movesDiv.scrollTop = movesDiv.scrollHeight;
+            $('#movesList').html(html || '1. ...');
+            const el = document.getElementById('movesList');
+            el.scrollTop = el.scrollHeight;
         }
 
-        function resetGame() {
-            game.reset();
-            board.position('start');
-            if (playerColor === 'b') {
+        function setDepth(depth, el) {
+            engineDepth = depth;
+            $('.opt-group .opt-btn').removeClass('active');
+            $(el).addClass('active');
+        }
+
+        function setUserColor(color, el) {
+            userColor = color;
+            resetGame();
+            if (userColor === 'b') {
                 board.orientation('black');
-                setTimeout(makeEngineMove, 500);
+                makeEngineMove();
             } else {
                 board.orientation('white');
             }
-            updateStatus();
-            $('#engineStatus').text('Stockfish Ready');
         }
 
+        function flipBoard() { board.flip(); }
         function undoMove() {
-            if (isEngineThinking) return;
-            // Undo engine move and player move
-            game.undo();
-            game.undo();
+            clearSelectedSquare();
+            game.undo(); game.undo();
             board.position(game.fen());
-            updateStatus();
+            renderHistory();
+            checkGameState();
         }
-
-        function flipBoard() {
-            board.flip();
-        }
-
-        function changeDifficulty() {
-            engineDepth = parseInt($('#engineLevel').val());
-        }
-
-        function changeColor() {
-            playerColor = $('#playerColor').val();
-            resetGame();
+        function resetGame() {
+            clearSelectedSquare();
+            game.reset();
+            board.position('start');
+            renderHistory();
+            checkGameState();
         }
     </script>
 </body>
