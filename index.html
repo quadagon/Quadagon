@@ -3,261 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon Chess Platform</title>
-
-    <!-- Dependencies CSS -->
+    <title>Quadagon - Book Puzzles Training</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #181818;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
+
+        header {
+            width: 100%; background: #181818; padding: 12px 4%; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 2px solid #2a2a2a;
+        }
+        .brand-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .brand-logo { font-size: 1.6rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .brand-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+
+        .lobby-home-btn {
+            background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; padding: 6px 14px;
+            border-radius: 20px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem;
         }
 
-        h1 {
-            color: #4CAF50;
-            margin-bottom: 10px;
-        }
+        .main-container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1100px; margin: 0 auto; width: 100%; justify-content: center; align-items: flex-start; }
 
-        .main-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            max-width: 1000px;
-            width: 100%;
-            margin-top: 10px;
-        }
+        .board-card { background: #1e1e1e; padding: 18px; border-radius: 16px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .board-wrapper { width: 440px; height: 440px; position: relative; }
+        #chessboard { width: 100%; height: 100%; }
 
-        #board {
-            width: 450px;
-            max-width: 90vw;
-        }
+        .board-controls { display: flex; gap: 10px; width: 100%; }
+        .action-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; border: none; transition: 0.2s; }
+        .reset-btn { background: #333; color: #ccc; border: 1px solid #444; }
+        .reset-btn:hover { background: #444; color: #fff; }
+        .done-btn { background: #4CAF50; color: #000; }
+        .done-btn:hover { background: #45a049; }
 
-        .panel {
-            background-color: #242424;
-            padding: 20px;
-            border-radius: 8px;
-            flex: 1;
-            min-width: 280px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
+        .sidebar { flex: 1; min-width: 320px; max-width: 420px; background: #1e1e1e; padding: 20px; border-radius: 16px; border: 1px solid #333; display: flex; flex-direction: column; gap: 16px; }
 
-        .panel h2 {
-            font-size: 1.2rem;
-            margin-top: 0;
-            border-bottom: 1px solid #444;
-            padding-bottom: 8px;
-            color: #4CAF50;
-        }
+        .upload-section { background: #141414; padding: 16px; border-radius: 10px; border: 2px dashed #4CAF50; text-align: center; }
+        .upload-label { font-size: 0.9rem; color: #fff; font-weight: bold; margin-bottom: 8px; display: block; }
+        input[type="file"] { font-size: 0.85rem; color: #aaa; width: 100%; }
 
-        .control-group {
-            margin-bottom: 15px;
-        }
+        .info-card { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; text-align: center; }
+        .puzzle-title { font-size: 1.1rem; font-weight: bold; color: #fff; margin-bottom: 4px; }
+        .puzzle-meta { font-size: 0.85rem; color: #4CAF50; font-weight: bold; }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
+        .solution-card { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #333; display: none; }
+        .solution-title { font-size: 0.9rem; font-weight: bold; color: #4CAF50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .solution-moves { font-family: 'Courier New', Courier, monospace; font-size: 0.95rem; color: #e0e0e0; line-height: 1.5; word-break: break-word; max-height: 180px; overflow-y: auto; padding-right: 5px; }
 
-        select, input[type="file"], button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            border: 1px solid #444;
-            background-color: #333;
-            color: #fff;
-            box-sizing: border-box;
-            font-size: 0.9rem;
-        }
-
-        button {
-            background-color: #4CAF50;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .btn-alt {
-            background-color: #555;
-        }
-
-        .btn-alt:hover {
-            background-color: #666;
-        }
-
-        #history {
-            height: 100px;
-            overflow-y: auto;
-            background: #111;
-            padding: 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-
-        footer {
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: #888;
-            text-align: center;
-        }
+        .nav-group { display: flex; gap: 10px; margin-top: auto; }
+        .nav-btn { flex: 1; background: #2a2a2a; color: #fff; border: 1px solid #3d3d3d; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .nav-btn:hover { border-color: #4CAF50; background: #333; }
     </style>
 </head>
 <body>
-
-    <h1>Quadagon</h1>
-    <p style="margin-top:-5px; color:#aaa;">Open Source Chess Platform</p>
+    <header>
+        <div class="brand-container" onclick="window.location.href='index.html'">
+            <div class="brand-logo">◈</div>
+            <div class="brand-title">Quadagon Puzzles</div>
+        </div>
+        <a href="index.html" class="lobby-home-btn">🏠 Main Menu</a>
+    </header>
 
     <div class="main-container">
-        <!-- Chessboard Container -->
-        <div id="board"></div>
+        <div class="board-card">
+            <div class="board-wrapper">
+                <div id="chessboard"></div>
+            </div>
+            <div class="board-controls">
+                <button class="action-btn reset-btn" onclick="resetBoard()">🔄 Reset Board</button>
+                <button class="action-btn done-btn" onclick="showSolution()">✅ Done / Solution</button>
+            </div>
+        </div>
 
-        <!-- Right Side Lobby & Tools Panel -->
-        <div class="panel">
-            <h2>Lobby & Controls</h2>
-            <div class="control-group">
-                <label for="mode">Opponent:</label>
-                <select id="mode">
-                    <option value="pvp">Pass & Play (Local)</option>
-                    <option value="bot">Play vs Computer</option>
-                </select>
+        <div class="sidebar">
+            <div class="upload-section">
+                <span class="upload-label">📂 Upload Any Chess Book PGN File</span>
+                <input type="file" id="pgnFileInput" accept=".pgn" onchange="handlePgnUpload(event)">
             </div>
 
-            <button id="start-btn">New Game</button>
-            <button id="flip-btn" class="btn-alt">Flip Board</button>
-
-            <h2>Import & Puzzles</h2>
-            <div class="control-group">
-                <label for="pgn-file">Choose File (PGN/FEN):</label>
-                <input type="file" id="pgn-file" accept=".pgn,.fen,.txt">
+            <div class="info-card">
+                <div class="puzzle-title" id="puzzleHeader">No PGN File Loaded</div>
+                <div class="puzzle-meta" id="puzzleTurn">Please upload your PGN file above</div>
             </div>
-            <button id="puzzle-btn" class="btn-alt">Load Random Puzzle</button>
 
-            <h2>Game Review</h2>
-            <div id="history">No moves played yet.</div>
+            <div class="solution-card" id="solutionBox">
+                <div class="solution-title">📖 Solution & Continuation</div>
+                <div class="solution-moves" id="solutionMoves">--</div>
+            </div>
+
+            <div class="nav-group">
+                <button class="nav-btn" onclick="prevPuzzle()">⏮️ Previous</button>
+                <button class="nav-btn" onclick="nextPuzzle()">Next ⏭️</button>
+            </div>
         </div>
     </div>
 
-    <footer>
-        <p>&copy; 2026 Quadagon. All rights reserved.</p>
-        <p>Engine powered by open-source chess.js & chessboard.js</p>
-    </footer>
-
-    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
     <script>
-        var board = null;
-        var game = new Chess();
-        var $history = $('#history');
+        let board = null;
+        let game = new Chess();
+        let loadedPuzzles = [];
+        let puzzleIndex = 0;
 
-        function updateHistory() {
-            var moves = game.history();
-            if (moves.length === 0) {
-                $history.html('No moves played yet.');
-                return;
-            }
-            var text = '';
-            for (var i = 0; i < moves.length; i += 2) {
-                text += ((i / 2) + 1) + '. ' + moves[i] + ' ' + (moves[i + 1] || '') + '<br>';
-            }
-            $history.html(text);
-            $history.scrollTop($history[0].scrollHeight);
+        $(document).ready(function() {
+            board = Chessboard('chessboard', {
+                draggable: true,
+                position: 'start',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd
+            });
+        });
+
+        function onDragStart(source, piece) {
+            if (game.game_over() || loadedPuzzles.length === 0) return false;
         }
 
-        function makeBotMove() {
-            var moves = game.moves();
-            if (moves.length === 0) return;
-            var randomMove = moves[Math.floor(Math.random() * moves.length)];
-            game.move(randomMove);
-            board.position(game.fen());
-            updateHistory();
+        function handlePgnUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                parsePgnData(e.target.result);
+            };
+            reader.readAsText(file);
         }
 
-        function onDragStart (source, piece) {
-            if (game.game_over()) return false;
-            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                return false;
+        function parsePgnData(pgnText) {
+            const rawGames = pgnText.split(/\[Event /gi);
+            loadedPuzzles = [];
+
+            rawGames.forEach((gText) => {
+                if (!gText.trim()) return;
+                const fullText = '[Event ' + gText;
+
+                const fenMatch = fullText.match(/\[FEN "([^"]+)"\]/i);
+                const initialFen = fenMatch ? fenMatch[1] : null;
+
+                let movesText = fullText.replace(/\[.*?\]/g, '').trim();
+
+                if (movesText || initialFen) {
+                    loadedPuzzles.push({
+                        id: loadedPuzzles.length + 1,
+                        fen: initialFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                        rawMoves: movesText || 'No notation supplied.',
+                        title: `Puzzle #${loadedPuzzles.length + 1}`
+                    });
+                }
+            });
+
+            if (loadedPuzzles.length > 0) {
+                puzzleIndex = 0;
+                loadPuzzle();
+                alert(`Successfully loaded ${loadedPuzzles.length} puzzles!`);
+            } else {
+                alert('Could not parse PGN file.');
             }
         }
 
-        function onDrop (source, target) {
-            var move = game.move({
+        function loadPuzzle() {
+            if (loadedPuzzles.length === 0) return;
+            const pz = loadedPuzzles[puzzleIndex];
+
+            game.load(pz.fen);
+            board.orientation(game.turn() === 'w' ? 'white' : 'black');
+            board.position(pz.fen);
+
+            $('#puzzleHeader').text(`${pz.title} (${puzzleIndex + 1} / ${loadedPuzzles.length})`);
+            $('#puzzleTurn').text(game.turn() === 'w' ? 'White to Move' : 'Black to Move');
+            
+            $('#solutionBox').hide();
+            $('#solutionMoves').text('');
+        }
+
+        function onDrop(source, target) {
+            const move = game.move({
                 from: source,
                 to: target,
                 promotion: 'q'
             });
 
             if (move === null) return 'snapback';
-
-            updateHistory();
-
-            if ($('#mode').val() === 'bot' && !game.game_over()) {
-                window.setTimeout(makeBotMove, 250);
-            }
         }
 
-        function onSnapEnd () {
+        function onSnapEnd() {
             board.position(game.fen());
         }
 
-        board = Chessboard('board', {
-            draggable: true,
-            position: 'start',
-            onDragStart: onDragStart,
-            onDrop: onDrop,
-            onSnapEnd: onSnapEnd
-        });
+        function resetBoard() {
+            if (loadedPuzzles.length === 0) return;
+            loadPuzzle();
+        }
 
-        $('#start-btn').on('click', function() {
-            game.reset();
-            board.start();
-            updateHistory();
-        });
+        function showSolution() {
+            if (loadedPuzzles.length === 0) return;
+            const pz = loadedPuzzles[puzzleIndex];
+            $('#solutionMoves').text(pz.rawMoves);
+            $('#solutionBox').slideDown();
+        }
 
-        $('#flip-btn').on('click', function() {
-            board.flip();
-        });
+        function nextPuzzle() {
+            if (puzzleIndex < loadedPuzzles.length - 1) {
+                puzzleIndex++;
+                loadPuzzle();
+            }
+        }
 
-        $('#puzzle-btn').on('click', function() {
-            var samplePuzzle = 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4';
-            game.load(samplePuzzle);
-            board.position(samplePuzzle);
-            updateHistory();
-        });
-
-        $('#pgn-file').on('change', function(e) {
-            var file = e.target.files[0];
-            if (!file) return;
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var content = e.target.result;
-                if (game.load_pgn(content) || game.load(content.trim())) {
-                    board.position(game.fen());
-                    updateHistory();
-                } else {
-                    alert('Invalid file content.');
-                }
-            };
-            reader.readAsText(file);
-        });
+        function prevPuzzle() {
+            if (puzzleIndex > 0) {
+                puzzleIndex--;
+                loadPuzzle();
+            }
+        }
     </script>
 </body>
 </html>
