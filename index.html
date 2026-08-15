@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon</title>
+    <title>Quadagon - Open Source Chess Platform</title>
     
-    <!-- Chessboard.js CSS -->
+    <!-- Dependencies CSS -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
 
     <style>
@@ -15,16 +15,39 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             background-color: #f4f6f8;
+            color: #1a5276;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
         }
         h1 {
-            color: #1a5276;
-            margin-bottom: 20px;
+            margin: 0;
+            font-size: 2rem;
+        }
+        p.subtitle {
+            margin: 5px 0 15px 0;
+            color: #566573;
+            font-size: 0.95rem;
         }
         #board {
             width: 100%;
             max-width: 450px;
+            margin: 0 auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 4px;
+        }
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        footer a {
+            color: #1a5276;
+            text-decoration: none;
         }
         @media (max-width: 600px) {
             #board {
@@ -35,12 +58,22 @@
 </head>
 <body>
 
-    <h1>Quadagon</h1>
-    <div id="board"></div>
+    <header role="banner">
+        <h1>Quadagon</h1>
+        <p class="subtitle">Open Source Chess Platform</p>
+    </header>
 
-    <!-- Dependencies -->
+    <main role="main">
+        <div id="board" role="region" aria-label="Interactive Chess Board"></div>
+    </main>
+
+    <footer role="contentinfo">
+        <p>&copy; 2026 Quadagon. All rights reserved.</p>
+        <p>Powered by open-source engines: <strong>chess.js</strong> & <strong>chessboard.js</strong>.</p>
+    </footer>
+
+    <!-- JS Dependencies (Correct CDN Order) -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
@@ -48,7 +81,8 @@
         $(document).ready(function() {
             var board = Chessboard('board', {
                 position: 'start',
-                draggable: true
+                draggable: true,
+                pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png'
             });
         });
     </script>
