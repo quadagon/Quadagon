@@ -30,8 +30,11 @@
         .board-wrapper { width: 440px; height: 440px; position: relative; }
         #chessboard { width: 100%; height: 100%; }
 
-        /* Highlight Square Styling */
-        .selected-square { background-color: rgba(76, 175, 80, 0.5) !important; }
+        /* Highlight Selected Square */
+        .highlight-square {
+            box-shadow: inset 0 0 3px 3px #4CAF50 !important;
+            background-color: rgba(76, 175, 80, 0.4) !important;
+        }
 
         .board-controls { display: flex; gap: 8px; width: 100%; }
         .action-btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; border: none; transition: 0.2s; background: #2a2a2a; color: #fff; border: 1px solid #3d3d3d; }
@@ -140,36 +143,53 @@
                 onSnapEnd: onSnapEnd
             });
 
-            // Tap & Touch Click-to-Move Event Bindings
-            $('#chessboard').on('click', '.square-55d63', function() {
-                const square = $(this).attr('data-square');
-                handleSquareClick(square);
+            // Tap / Click Handler Override for Mobile & Desktop Touch
+            $(document).on('click pointerdown', '#chessboard div[class*="square-"]', function(e) {
+                e.stopPropagation();
+                let square = null;
+                const classes = $(this).attr('class').split(/\s+/);
+                for (let c of classes) {
+                    if (c.indexOf('square-') === 0 && c.length === 9) {
+                        square = c.substring(7);
+                        break;
+                    }
+                }
+
+                if (square) {
+                    onSquareTap(square);
+                }
             });
         });
 
-        function clearSelectedSquare() {
-            $('.square-55d63').removeClass('selected-square');
-            selectedSquare = null;
+        function removeHighlights() {
+            $('#chessboard div[class*="square-"]').removeClass('highlight-square');
         }
 
-        function handleSquareClick(square) {
+        function onSquareTap(square) {
             if (game.game_over() || game.turn() !== userColor) return;
 
             if (selectedSquare === null) {
                 const piece = game.get(square);
                 if (piece && piece.color === userColor) {
                     selectedSquare = square;
-                    $(`.square-${square}`).addClass('selected-square');
+                    removeHighlights();
+                    $(`#chessboard .square-${square}`).addClass('highlight-square');
                 }
             } else {
                 const source = selectedSquare;
                 const target = square;
-                clearSelectedSquare();
 
-                if (source === target) return;
+                if (source === target) {
+                    selectedSquare = null;
+                    removeHighlights();
+                    return;
+                }
 
                 const move = game.move({ from: source, to: target, promotion: 'q' });
+
                 if (move !== null) {
+                    selectedSquare = null;
+                    removeHighlights();
                     board.position(game.fen());
                     renderHistory();
                     checkGameState();
@@ -180,7 +200,11 @@
                     const piece = game.get(square);
                     if (piece && piece.color === userColor) {
                         selectedSquare = square;
-                        $(`.square-${square}`).addClass('selected-square');
+                        removeHighlights();
+                        $(`#chessboard .square-${square}`).addClass('highlight-square');
+                    } else {
+                        selectedSquare = null;
+                        removeHighlights();
                     }
                 }
             }
@@ -193,7 +217,8 @@
         }
 
         function onDrop(source, target) {
-            clearSelectedSquare();
+            selectedSquare = null;
+            removeHighlights();
             const move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
@@ -280,14 +305,16 @@
 
         function flipBoard() { board.flip(); }
         function undoMove() {
-            clearSelectedSquare();
+            selectedSquare = null;
+            removeHighlights();
             game.undo(); game.undo();
             board.position(game.fen());
             renderHistory();
             checkGameState();
         }
         function resetGame() {
-            clearSelectedSquare();
+            selectedSquare = null;
+            removeHighlights();
             game.reset();
             board.position('start');
             renderHistory();
