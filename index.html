@@ -3,74 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon - Chess Platform</title>
+    <title>Quadagon - Open Source Chess Platform</title>
+    
+    <!-- SEO & Metadata -->
+    <meta name="description" content="Play chess seamlessly on Quadagon, a modern open-source chess platform built for speed and accessibility.">
+    <meta name="keywords" content="chess, quadagon, open source chess, play chess online, chess.js">
+    
+    <!-- Open Graph for Social Sharing -->
+    <meta property="og:title" content="Quadagon - Open Source Chess Platform">
+    <meta property="og:description" content="A modern, lightweight open-source chess platform.">
+    <meta property="og:image" content="assets/logo.svg">
+
+    <!-- Browser Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+    <!-- CSS / Responsive Design -->
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #121212; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f4f6f8;
+            color: #1a5276;
+        }
         header {
-            width: 100%; background: #181818; padding: 16px 5%; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 2px solid #2a2a2a;
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .brand { display: flex; align-items: center; gap: 12px; }
-        .logo { font-size: 1.8rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
-        .title { font-size: 2rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
-        .credit { font-size: 0.9rem; font-weight: 700; color: #888; background: #222; padding: 6px 14px; border-radius: 20px; border: 1px solid #333; }
-        .credit span { color: #4CAF50; font-weight: 800; }
-
-        .container { max-width: 1000px; width: 90%; margin: 40px auto; text-align: center; }
-        .hero-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
-        .hero-subtitle { font-size: 1.1rem; color: #aaa; margin-bottom: 40px; }
-
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; justify-content: center; }
-        .card {
-            background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 26px 20px;
-            display: flex; flex-direction: column; align-items: center; gap: 14px; transition: transform 0.2s, border-color 0.2s;
-            text-decoration: none; color: inherit;
+        .logo-img {
+            width: 120px;
+            height: auto;
+            margin-bottom: 10px;
         }
-        .card:hover { transform: translateY(-5px); border-color: #4CAF50; box-shadow: 0 10px 25px rgba(76, 175, 80, 0.15); }
-        .card-icon { font-size: 2.8rem; }
-        .card-title { font-size: 1.3rem; font-weight: bold; }
-        .card-desc { font-size: 0.85rem; color: #888; line-height: 1.4; }
-        .card-btn { background: #4CAF50; color: #121212; font-weight: bold; border: none; padding: 10px 20px; border-radius: 8px; width: 100%; margin-top: auto; }
+        #board {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        @media (max-width: 600px) {
+            #board {
+                max-width: 90vw;
+            }
+            .logo-img {
+                width: 90px;
+            }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="brand">
-            <div class="logo">◈</div>
-            <div class="title">Quadagon</div>
-        </div>
-        <div class="credit">Made By :- <span>Jayesh Mishra</span></div>
+
+    <header role="banner">
+        <img src="assets/logo.svg" alt="Quadagon Logo" class="logo-img">
+        <h1>Quadagon</h1>
+        <p>Open Source Chess Platform</p>
     </header>
 
-    <div class="container">
-        <h1 class="hero-title">Welcome to Quadagon</h1>
-        <p class="hero-subtitle">Master chess with Stockfish Engine, Game Review, and Book Puzzles</p>
+    <main role="main">
+        <div id="board" role="region" aria-label="Interactive Chess Board"></div>
+    </main>
 
-        <div class="cards-grid">
-            <a href="play.html" class="card">
-                <div class="card-icon">🤖</div>
-                <div class="card-title">Play vs Computer</div>
-                <div class="card-desc">Challenge Stockfish 16, 18, or 20 in a clean environment.</div>
-                <button class="card-btn">Play Now</button>
-            </a>
-
-            <a href="puzzles.html" class="card">
-                <div class="card-icon">🧩</div>
-                <div class="card-title">Book Puzzles Training</div>
-                <div class="card-desc">Train with Dvoretsky & Woodpecker PGN files with auto-validation.</div>
-                <button class="card-btn">Train Puzzles</button>
-            </a>
-
-            <a href="review.html" class="card">
-                <div class="card-icon">🔍</div>
-                <div class="card-title">Game Review Studio</div>
-                <div class="card-desc">Deep position analysis, evaluation bar, and move accuracy.</div>
-                <button class="card-btn">Open Studio</button>
-            </a>
-        </div>
-    </div>
-<footer style="text-align: center; padding: 20px; font-size: 14px; opacity: 0.8;">© 2026 Quadagon. All rights reserved.</footer>
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Quadagon Error Handler:', msg);
+            return false;
+        };
+    </script>
 </body>
 </html>
