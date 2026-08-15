@@ -3,87 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadagon - Open Source Chess Platform</title>
-    
+    <title>Quadagon Chess Platform</title>
+
     <!-- Dependencies CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
 
     <style>
         body {
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
+            background-color: #181818;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: #f4f6f8;
-            color: #1a5276;
         }
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+
         h1 {
-            margin: 0;
-            font-size: 2rem;
+            color: #4CAF50;
+            margin-bottom: 10px;
         }
-        p.subtitle {
-            margin: 5px 0 15px 0;
-            color: #566573;
-            font-size: 0.95rem;
-        }
-        #board {
+
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1000px;
             width: 100%;
-            max-width: 450px;
-            margin: 0 auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-radius: 4px;
+            margin-top: 10px;
         }
+
+        #board {
+            width: 450px;
+            max-width: 90vw;
+        }
+
+        .panel {
+            background-color: #242424;
+            padding: 20px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 280px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .panel h2 {
+            font-size: 1.2rem;
+            margin-top: 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+            color: #4CAF50;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        select, input[type="file"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .btn-alt {
+            background-color: #555;
+        }
+
+        .btn-alt:hover {
+            background-color: #666;
+        }
+
+        #history {
+            height: 100px;
+            overflow-y: auto;
+            background: #111;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
         footer {
             margin-top: 30px;
+            font-size: 0.8rem;
+            color: #888;
             text-align: center;
-            font-size: 0.85rem;
-            color: #7f8c8d;
-        }
-        footer a {
-            color: #1a5276;
-            text-decoration: none;
-        }
-        @media (max-width: 600px) {
-            #board {
-                max-width: 90vw;
-            }
         }
     </style>
 </head>
 <body>
 
-    <header role="banner">
-        <h1>Quadagon</h1>
-        <p class="subtitle">Open Source Chess Platform</p>
-    </header>
+    <h1>Quadagon</h1>
+    <p style="margin-top:-5px; color:#aaa;">Open Source Chess Platform</p>
 
-    <main role="main">
-        <div id="board" role="region" aria-label="Interactive Chess Board"></div>
-    </main>
+    <div class="main-container">
+        <!-- Chessboard Container -->
+        <div id="board"></div>
 
-    <footer role="contentinfo">
+        <!-- Right Side Lobby & Tools Panel -->
+        <div class="panel">
+            <h2>Lobby & Controls</h2>
+            <div class="control-group">
+                <label for="mode">Opponent:</label>
+                <select id="mode">
+                    <option value="pvp">Pass & Play (Local)</option>
+                    <option value="bot">Play vs Computer</option>
+                </select>
+            </div>
+
+            <button id="start-btn">New Game</button>
+            <button id="flip-btn" class="btn-alt">Flip Board</button>
+
+            <h2>Import & Puzzles</h2>
+            <div class="control-group">
+                <label for="pgn-file">Choose File (PGN/FEN):</label>
+                <input type="file" id="pgn-file" accept=".pgn,.fen,.txt">
+            </div>
+            <button id="puzzle-btn" class="btn-alt">Load Random Puzzle</button>
+
+            <h2>Game Review</h2>
+            <div id="history">No moves played yet.</div>
+        </div>
+    </div>
+
+    <footer>
         <p>&copy; 2026 Quadagon. All rights reserved.</p>
-        <p>Powered by open-source engines: <strong>chess.js</strong> & <strong>chessboard.js</strong>.</p>
+        <p>Engine powered by open-source chess.js & chessboard.js</p>
     </footer>
 
-    <!-- JS Dependencies (Correct CDN Order) -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
     <script>
-        $(document).ready(function() {
-            var board = Chessboard('board', {
-                position: 'start',
-                draggable: true,
-                pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png'
+        var board = null;
+        var game = new Chess();
+        var $history = $('#history');
+
+        function updateHistory() {
+            var moves = game.history();
+            if (moves.length === 0) {
+                $history.html('No moves played yet.');
+                return;
+            }
+            var text = '';
+            for (var i = 0; i < moves.length; i += 2) {
+                text += ((i / 2) + 1) + '. ' + moves[i] + ' ' + (moves[i + 1] || '') + '<br>';
+            }
+            $history.html(text);
+            $history.scrollTop($history[0].scrollHeight);
+        }
+
+        function makeBotMove() {
+            var moves = game.moves();
+            if (moves.length === 0) return;
+            var randomMove = moves[Math.floor(Math.random() * moves.length)];
+            game.move(randomMove);
+            board.position(game.fen());
+            updateHistory();
+        }
+
+        function onDragStart (source, piece) {
+            if (game.game_over()) return false;
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+
+        function onDrop (source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
             });
+
+            if (move === null) return 'snapback';
+
+            updateHistory();
+
+            if ($('#mode').val() === 'bot' && !game.game_over()) {
+                window.setTimeout(makeBotMove, 250);
+            }
+        }
+
+        function onSnapEnd () {
+            board.position(game.fen());
+        }
+
+        board = Chessboard('board', {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd
+        });
+
+        $('#start-btn').on('click', function() {
+            game.reset();
+            board.start();
+            updateHistory();
+        });
+
+        $('#flip-btn').on('click', function() {
+            board.flip();
+        });
+
+        $('#puzzle-btn').on('click', function() {
+            var samplePuzzle = 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4';
+            game.load(samplePuzzle);
+            board.position(samplePuzzle);
+            updateHistory();
+        });
+
+        $('#pgn-file').on('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var content = e.target.result;
+                if (game.load_pgn(content) || game.load(content.trim())) {
+                    board.position(game.fen());
+                    updateHistory();
+                } else {
+                    alert('Invalid file content.');
+                }
+            };
+            reader.readAsText(file);
         });
     </script>
 </body>
