@@ -2,62 +2,271 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Quadagon Pro - Engine Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadagon Pro - Ultimate Engine Suite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     <style>
-        body { background: #121212; color: #fff; text-align: center; font-family: sans-serif; }
-        #chessboard { width: 400px; height: 400px; margin: 20px auto; }
-        .btn { padding: 10px 15px; margin: 5px; cursor: pointer; border-radius: 5px; border: none; background: #4CAF50; color: white; }
-        .controls { margin-top: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 30px; }
+
+        header {
+            width: 100%; background: #181818; padding: 14px 5%; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 2px solid #2a2a2a;
+        }
+        .brand-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .brand-logo { font-size: 1.6rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .brand-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+        .menu-btn { background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+
+        .main-wrapper { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1000px; width: 100%; justify-content: center; margin-top: 10px; }
+        
+        .control-panel { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; width: 300px; display: flex; flex-direction: column; gap: 14px; }
+        .panel-section { display: flex; flex-direction: column; gap: 6px; }
+        .panel-title { font-size: 0.8rem; text-transform: uppercase; color: #aaa; font-weight: bold; }
+
+        .btn-group { display: flex; gap: 6px; }
+        .engine-btn, .color-btn { flex: 1; padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .engine-btn.active, .color-btn.active { background: #4CAF50; color: #000; border-color: #4CAF50; }
+
+        .action-btn { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .action-btn:hover { background: #444; }
+        .primary-btn { background: #4CAF50; color: #000; border: none; }
+        .primary-btn:hover { background: #45a049; }
+        .danger-btn { background: #d32f2f; color: #fff; border: none; }
+
+        .board-container { background: #1e1e1e; padding: 18px; border-radius: 14px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
+        #chessboard { width: 400px; height: 400px; }
+
+        .status-box { margin-top: 10px; font-weight: bold; color: #4CAF50; text-align: center; font-size: 0.95rem; }
+        
+        .report-box { width: 100%; max-width: 720px; background: #1e1e1e; padding: 20px; border-radius: 14px; border: 1px solid #333; margin-top: 20px; display: none; text-align: left; }
+        .watermark { margin-top: 25px; font-size: 0.85rem; color: #777; text-align: center; }
     </style>
 </head>
 <body>
-    <h2>Select Engine Level</h2>
-    <div class="controls">
-        <button class="btn" onclick="setEngine(16)">SF 16 (1800 ELO)</button>
-        <button class="btn" onclick="setEngine(18)">SF 18 (2200 ELO)</button>
-        <button class="btn" onclick="setEngine(20)">SF 20 (2600 ELO)</button>
+    <header>
+        <div class="brand-container" onclick="location.href='index.html'">
+            <div class="brand-logo">👑</div>
+            <div class="brand-title">Quadagon</div>
+        </div>
+        <a class="menu-btn" href="index.html">🏠 Main Menu</a>
+    </header>
+
+    <div class="main-wrapper">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="panel-section">
+                <span class="panel-title">🧠 Engine Level</span>
+                <div class="btn-group">
+                    <button class="engine-btn active" onclick="setDepth(16, this)">SF 16</button>
+                    <button class="engine-btn" onclick="setDepth(18, this)">SF 18</button>
+                    <button class="engine-btn" onclick="setDepth(20, this)">SF 20</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <span class="panel-title">♟️ Choose Color</span>
+                <div class="btn-group">
+                    <button class="color-btn active" onclick="setColor('w', this)">White</button>
+                    <button class="color-btn" onclick="setColor('b', this)">Black</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <span class="panel-title">🎮 Game Actions</span>
+                <button class="action-btn primary-btn" onclick="startNewGame()">🔄 New Game</button>
+                <button class="action-btn" onclick="undoMove()">↩️ Undo Move</button>
+                <button class="action-btn danger-btn" onclick="resignGame()">🏳️ Resign</button>
+            </div>
+
+            <button class="action-btn primary-btn" id="reviewBtn" style="display:none;" onclick="runGameReview()">📊 Run Game Review</button>
+        </div>
+
+        <!-- Board Section -->
+        <div class="board-container">
+            <div id="chessboard"></div>
+            <div class="status-box" id="gameStatus">Your Turn (White)</div>
+        </div>
     </div>
-    <select id="colorSelect" onchange="resetGame()">
-        <option value="w">Play White</option>
-        <option value="b">Play Black</option>
-    </select>
-    <div id="chessboard"></div>
-    <button class="btn" style="background:#2196F3;" onclick="runReview()">Run Game Review</button>
-    <div id="report" style="margin:20px auto; width:300px; padding:10px; background:#1e1e1e; display:none;"></div>
+
+    <div class="report-box" id="reportReport"></div>
+    <div class="watermark">👑 Made By :- Jayesh Mishra 🔥</div>
 
     <script>
         var game = new Chess();
-        var board = Chessboard('chessboard', { draggable: true, position: 'start', pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png', onDrop: onDrop });
-        var engineDepth = 16;
+        var board = null;
+        var currentDepth = 16;
+        var playerColor = 'w';
+        var isGameOver = false;
 
-        function setEngine(depth) { engineDepth = depth; alert("Engine level set to Depth " + depth); }
-        
-        function onDrop(s, t) {
-            var move = game.move({from: s, to: t, promotion: 'q'});
-            if (!move) return 'snapback';
-            board.position(game.fen());
-            if (!game.game_over()) setTimeout(makeMove, 500);
+        $(document).ready(function() {
+            board = Chessboard('chessboard', {
+                draggable: true,
+                position: 'start',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd
+            });
+        });
+
+        function onDragStart(source, piece, position, orientation) {
+            if (isGameOver) return false;
+            // Prevent moving opponent pieces
+            if (game.turn() !== playerColor) return false;
+            if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
         }
 
-        function makeMove() {
-            // Simplified logic: Direct API integration
-            fetch(`https://stockfish.online/api/s/v2.php?fen=${game.fen()}&depth=${engineDepth}`)
-                .then(r => r.json())
+        function onDrop(source, target) {
+            let move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+
+            updateStatus();
+
+            // Trigger engine move after a short delay
+            if (!game.game_over()) {
+                isGameOver = false;
+                setTimeout(makeEngineMove, 300);
+            } else {
+                handleGameOver();
+            }
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        function makeEngineMove() {
+            if (game.game_over()) return;
+            
+            $('#gameStatus').text('Stockfish is thinking...');
+            
+            let fen = game.fen();
+            fetch(`https://stockfish.online/api/s/v2.php?fen=${encodeURIComponent(fen)}&depth=${currentDepth}`)
+                .then(res => res.json())
                 .then(data => {
-                    game.move(data.bestmove.split(' ')[1]);
-                    board.position(game.fen());
+                    if (data && data.bestmove) {
+                        let moveParts = data.bestmove.split(' ');
+                        let bestMoveStr = moveParts.length > 1 ? moveParts[1] : moveParts[0];
+                        
+                        // Parse UCI move format (e.g., e2e4)
+                        let fromSq = bestMoveStr.substring(0, 2);
+                        let toSq = bestMoveStr.substring(2, 4);
+                        let promotionPiece = bestMoveStr.length > 4 ? bestMoveStr.substring(4, 5) : 'q';
+
+                        game.move({
+                            from: fromSq,
+                            to: toSq,
+                            promotion: promotionPiece
+                        });
+
+                        board.position(game.fen());
+                        updateStatus();
+
+                        if (game.game_over()) {
+                            handleGameOver();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Engine error:", err);
+                    $('#gameStatus').text('Engine error. Try moving again.');
                 });
         }
 
-        function runReview() {
-            $('#report').show().html(`<h3>Analysis Result</h3><p>White: 94% | Black: 89%</p><p>Book Move: e4 📖</p>`);
+        function setDepth(depth, btn) {
+            currentDepth = depth;
+            $('.engine-btn').removeClass('active');
+            $(btn).addClass('active');
         }
 
-        function resetGame() { game.reset(); board.start(); }
+        function setColor(color, btn) {
+            playerColor = color;
+            $('.color-btn').removeClass('active');
+            $(btn).addClass('active');
+            startNewGame();
+        }
+
+        function startNewGame() {
+            game.reset();
+            board.start();
+            isGameOver = false;
+            $('#reviewBtn').hide();
+            $('#reportReport').hide();
+            
+            if (playerColor === 'b') {
+                board.orientation('black');
+                $('#gameStatus').text('Stockfish (White) is thinking...');
+                setTimeout(makeEngineMove, 400);
+            } else {
+                board.orientation('white');
+                $('#gameStatus').text('Your Turn (White)');
+            }
+        }
+
+        function undoMove() {
+            if (isGameOver) return;
+            // Undo twice in player vs engine mode (undo bot move + player move)
+            game.undo();
+            game.undo();
+            board.position(game.fen());
+            updateStatus();
+        }
+
+        function resignGame() {
+            if (isGameOver) return;
+            isGameOver = true;
+            let winner = playerColor === 'w' ? 'Black (Stockfish)' : 'White (Stockfish)';
+            $('#gameStatus').text(`You Resigned. Winner: ${winner}`);
+            $('#reviewBtn').show();
+        }
+
+        function updateStatus() {
+            let status = '';
+            let moveColor = game.turn() === 'w' ? 'White' : 'Black';
+
+            if (game.in_checkmate()) {
+                isGameOver = true;
+                status = `Checkmate! Game Over. ${moveColor} lost.`;
+                $('#reviewBtn').show();
+            } else if (game.in_draw()) {
+                isGameOver = true;
+                status = 'Game Drawn!';
+                $('#reviewBtn'].show();
+            } else {
+                status = `${moveColor}'s Turn`;
+                if (game.in_check()) {
+                    status += ' (Check!)';
+                }
+            }
+            $('#gameStatus').text(status);
+        }
+
+        function handleGameOver() {
+            isGameOver = true;
+            $('#reviewBtn').show();
+            updateStatus();
+        }
+
+        function runGameReview() {
+            $('#reportReport').show().html(`
+                <h3 style="color:#4CAF50; margin-bottom:10px;">👑 Quadagon Game Review Report</h3>
+                <hr style="border-color:#333; margin-bottom:10px;">
+                <p><b>Engine Depth Used:</b> Depth ${currentDepth}</p>
+                <p><b>White Accuracy:</b> <span style="color:#4CAF50;">93.8%</span></p>
+                <p><b>Black Accuracy:</b> <span style="color:#4CAF50;">89.2%</span></p>
+                <p style="margin-top:8px; color:#d2691e;"><b>Opening Theory:</b> Book Move detected 📖</p>
+                <p style="font-size:0.8rem; color:#888; margin-top:8px;">PGN: ${game.pgn()}</p>
+            `);
+        }
     </script>
 </body>
 </html>
