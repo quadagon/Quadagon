@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadagon - Game Review & Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #121212; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
+
+        header {
+            width: 100%; background: #181818; padding: 12px 4%; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 2px solid #2a2a2a;
+        }
+        .brand-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .brand-logo { font-size: 1.6rem; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .brand-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+
+        .lobby-home-btn {
+            background: #2a2a2a; color: #4CAF50; border: 1px solid #4CAF50; padding: 8px 16px;
+            border-radius: 20px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem;
+            transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .lobby-home-btn:hover { background: #4CAF50; color: #000; }
+
+        .main-container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1100px; margin: 0 auto; width: 100%; justify-content: center; align-items: flex-start; }
+
+        .board-card { background: #1e1e1e; padding: 18px; border-radius: 16px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .board-wrapper { width: 440px; height: 440px; position: relative; }
+        #chessboard { width: 100%; height: 100%; }
+
+        .board-controls { display: flex; gap: 8px; width: 100%; }
+        .action-btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; border: none; transition: 0.2s; background: #2a2a2a; color: #fff; border: 1px solid #3d3d3d; }
+        .action-btn:hover { border-color: #4CAF50; background: #333; }
+        .analyze-btn { background: #4CAF50; color: #000; border: none; }
+        .analyze-btn:hover { background: #45a049; }
+
+        .sidebar { flex: 1; min-width: 320px; max-width: 420px; background: #1e1e1e; padding: 20px; border-radius: 16px; border: 1px solid #333; display: flex; flex-direction: column; gap: 16px; }
+
+        .input-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; display: flex; flex-direction: column; gap: 8px; }
+        .input-label { font-size: 0.85rem; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        input[type="text"] { width: 100%; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; font-size: 0.85rem; outline: none; }
+        input[type="text"]:focus { border-color: #4CAF50; }
+
+        .eval-bar-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #2a2a2a; text-align: center; }
+        .eval-score { font-size: 1.4rem; font-weight: 800; color: #4CAF50; margin-bottom: 4px; }
+        .eval-desc { font-size: 0.85rem; color: #888; }
+
+        .annotation-legend { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; background: #141414; padding: 10px; border-radius: 8px; }
+        .anno-tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .brilliant { background: #00e5ff; color: #000; }
+        .great { background: #4CAF50; color: #000; }
+        .inaccuracy { background: #ffeb3b; color: #000; }
+        .mistake { background: #ff9800; color: #000; }
+        .blunder { background: #f44336; color: #fff; }
+
+        .moves-box { background: #141414; padding: 14px; border-radius: 10px; border: 1px solid #333; flex: 1; min-height: 150px; display: flex; flex-direction: column; }
+        .moves-title { font-size: 0.85rem; font-weight: bold; color: #4CAF50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .moves-list { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; color: #e0e0e0; line-height: 1.6; overflow-y: auto; max-height: 160px; word-break: break-word; }
+
+        footer { margin-top: auto; padding: 15px; text-align: center; color: #666; font-size: 0.8rem; border-top: 1px solid #222; width: 100%; }
+
+        @media (max-width: 500px) {
+            .board-wrapper { width: 100%; height: 320px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand-container" onclick="goToLobby()">
+            <div class="brand-logo">◈</div>
+            <div class="brand-title">Quadagon</div>
+        </div>
+        <button class="lobby-home-btn" onclick="goToLobby()">🏠 Main Menu</button>
+    </header>
+
+    <div class="main-container">
+        <div class="board-card">
+            <div class="board-wrapper">
+                <div id="chessboard"></div>
+            </div>
+            <div class="board-controls">
+                <button class="action-btn" onclick="stepFirst()">⏮️</button>
+                <button class="action-btn" onclick="stepPrev()">◀️</button>
+                <button class="action-btn" onclick="stepNext()">▶️</button>
+                <button class="action-btn" onclick="stepLast()">⏭️</button>
+                <button class="action-btn analyze-btn" onclick="evaluatePosition()">🔍 Eval</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="input-box">
+                <span class="input-label">📥 Load Position (FEN)</span>
+                <input type="text" id="fenInput" placeholder="Paste FEN here..." onchange="loadFen()">
+            </div>
+
+            <div class="eval-bar-box">
+                <div class="eval-score" id="evalScore">+0.00</div>
+                <div class="eval-desc" id="evalBestMove">Click 'Eval' to run Stockfish depth analysis</div>
+            </div>
+
+            <div class="annotation-legend">
+                <span class="anno-tag brilliant">!! Brilliant</span>
+                <span class="anno-tag great">! Great</span>
+                <span class="anno-tag inaccuracy">?! Inaccuracy</span>
+                <span class="anno-tag mistake">? Mistake</span>
+                <span class="anno-tag blunder">?? Blunder</span>
+            </div>
+
+            <div class="moves-box">
+                <div class="moves-title">📜 Notation & Review History</div>
+                <div class="moves-list" id="movesList">Move pieces on board or load FEN...</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Quadagon Chess Suite &copy; 2026 | Analysis Engine Powered by Stockfish V2 API
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        let board = null;
+        let game = new Chess();
+        let moveHistory = [];
+        let currentStep = 0;
+
+        function goToLobby() {
+            window.location.href = 'index.html';
+        }
+
+        $(document).ready(function() {
+            board = Chessboard('chessboard', {
+                draggable: true,
+                position: 'start',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd
+            });
+            updateHistory();
+        });
+
+        function onDragStart(source, piece) {
+            if (game.game_over()) return false;
+        }
+
+        function onDrop(source, target) {
+            const move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+            
+            $('#fenInput').val(game.fen());
+            updateHistory();
+            evaluatePosition();
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        function loadFen() {
+            const fen = $('#fenInput').val().trim();
+            if (game.load(fen)) {
+                board.position(fen);
+                updateHistory();
+                evaluatePosition();
+            } else {
+                alert('Invalid FEN position string.');
+            }
+        }
+
+        function evaluatePosition() {
+            $('#evalScore').text('Analyzing...');
+            $('#evalBestMove').text('Fetching engine calculation...');
+
+            const fen = encodeURIComponent(game.fen());
+            const url = `https://stockfish.online/api/s/v2.php?fen=${fen}&depth=12`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        let evalStr = data.evaluation !== undefined ? data.evaluation : '0.00';
+                        if (typeof evalStr === 'number' && evalStr > 0) evalStr = '+' + evalStr;
+                        $('#evalScore').text(evalStr);
+
+                        const bestMove = data.bestmove ? data.bestmove.split(' ')[1] : 'None';
+                        $('#evalBestMove').text(`Best Continuation: ${bestMove} | Depth: 12`);
+                    } else {
+                        $('#evalScore').text('N/A');
+                        $('#evalBestMove').text('Could not fetch evaluation.');
+                    }
+                })
+                .catch(() => {
+                    $('#evalScore').text('N/A');
+                    $('#evalBestMove').text('Offline mode / Network error.');
+                });
+        }
+
+        function updateHistory() {
+            const history = game.history({ verbose: true });
+            let movesHTML = '';
+            
+            history.forEach((m, idx) => {
+                const moveNo = Math.floor(idx / 2) + 1;
+                let symbol = '';
+                
+                // Annotation symbol mock preview
+                if (m.captured) symbol = ' <span class="anno-tag great">!</span>';
+                else if (m.flags.includes('p')) symbol = ' <span class="anno-tag brilliant">!!</span>';
+
+                if (idx % 2 === 0) {
+                    movesHTML += `<b>${moveNo}.</b> ${m.san}${symbol} `;
+                } else {
+                    movesHTML += `${m.san}${symbol} &nbsp;&nbsp; `;
+                }
+            });
+
+            $('#movesList').html(movesHTML || 'Move pieces on board to start analysis...');
+        }
+
+        function stepFirst() {
+            game.reset();
+            board.position('start');
+            $('#fenInput').val(game.fen());
+            updateHistory();
+        }
+
+        function stepPrev() {
+            game.undo();
+            board.position(game.fen());
+            $('#fenInput').val(game.fen());
+            updateHistory();
+        }
+
+        function stepNext() {
+            // Forward step reserved for PGN review parsing
+        }
+
+        function stepLast() {
+            // Last step reserved for PGN review parsing
+        }
+    </script>
+</body>
+</html>
